@@ -774,3 +774,17 @@ alter table public.orders
 add column if not exists payment_status text default 'unpaid',
 add column if not exists payment_provider text,
 add column if not exists payment_reference text;
+
+alter table public.orders
+drop constraint if exists orders_status_check;
+
+alter table public.orders
+add constraint orders_status_check
+check (status in ('pending_payment','pending','paid','processing','shipped','delivered','cancelled','refunded'));
+
+alter table public.orders
+drop constraint if exists orders_payment_status_check;
+
+alter table public.orders
+add constraint orders_payment_status_check
+check (payment_status in ('unpaid','pending','paid','failed','refunded'));
