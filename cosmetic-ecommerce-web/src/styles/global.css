@@ -1354,6 +1354,34 @@ input:focus {
   overflow-wrap: anywhere;
 }
 
+.payment-phone-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 520px;
+}
+
+.payment-phone-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.payment-phone-form input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem 0.85rem;
+  color: var(--ink);
+  font: inherit;
+}
+
+.payment-phone-form button {
+  justify-self: start;
+}
+
 .payment-actions {
   display: flex;
   flex-wrap: wrap;

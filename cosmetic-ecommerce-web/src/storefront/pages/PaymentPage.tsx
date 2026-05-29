@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../useAuth'
@@ -12,6 +13,7 @@ type OrderAddress = {
 type Order = {
   id: string
   order_number: string | null
+  address_id: string | null
   total_amount: number
   status: string
   payment_status: string
@@ -57,7 +59,10 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirmingDeliveryPayment, setConfirmingDeliveryPayment] = useState(false)
+  const [savingPhone, setSavingPhone] = useState(false)
+  const [paymentPhone, setPaymentPhone] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -73,6 +78,7 @@ export default function PaymentPage() {
         .select(`
           id,
           order_number,
+          address_id,
           total_amount,
           status,
           payment_status,
@@ -87,7 +93,9 @@ export default function PaymentPage() {
       if (error) {
         setErrorMessage(error.message)
       } else {
-        setOrder(data as Order | null)
+        const nextOrder = data as Order | null
+        setOrder(nextOrder)
+        setPaymentPhone(nextOrder ? getOrderAddress(nextOrder)?.phone || '' : '')
       }
 
       setLoading(false)
@@ -124,6 +132,53 @@ export default function PaymentPage() {
     }
 
     setConfirmingDeliveryPayment(false)
+  }
+
+  const handleSavePaymentPhone = async (e: FormEvent) => {
+    e.preventDefault()
+
+    if (!order || !user) return
+
+    const normalizedPhone = paymentPhone.trim()
+
+    if (!normalizedPhone) {
+      setErrorMessage('Renseignez un numero de telephone pour payer avec XPAYE.')
+      setSuccessMessage('')
+      return
+    }
+
+    if (!order.address_id) {
+      setErrorMessage("Adresse de livraison introuvable pour cette commande.")
+      setSuccessMessage('')
+      return
+    }
+
+    setSavingPhone(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+
+    const { error } = await supabase
+      .from('addresses')
+      .update({ phone: normalizedPhone })
+      .eq('id', order.address_id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      setErrorMessage(error.message)
+    } else {
+      const address = getOrderAddress(order)
+      const nextAddress = address ? { ...address, phone: normalizedPhone } : null
+
+      setOrder({
+        ...order,
+        addresses: Array.isArray(order.addresses)
+          ? order.addresses.map((item, index) => (index === 0 ? { ...item, phone: normalizedPhone } : item))
+          : nextAddress,
+      })
+      setSuccessMessage('Numero enregistre pour le paiement XPAYE.')
+    }
+
+    setSavingPhone(false)
   }
 
   if (authLoading || loading) {
@@ -188,6 +243,28 @@ export default function PaymentPage() {
             </div>
           </dl>
 
+          {order.payment_method !== 'cash_on_delivery' && (
+            <form className="payment-phone-form" onSubmit={handleSavePaymentPhone}>
+              <label>
+                Numero pour XPAYE
+                <input
+                  type="tel"
+                  value={paymentPhone}
+                  onChange={(e) => {
+                    setPaymentPhone(e.target.value)
+                    setSuccessMessage('')
+                  }}
+                  placeholder="+225 00 00 00 00 00"
+                  required
+                />
+              </label>
+              <button type="submit" className="btn-secondary" disabled={savingPhone}>
+                {savingPhone ? 'Enregistrement...' : 'Enregistrer le numero'}
+              </button>
+              {successMessage && <p className="auth-notice success">{successMessage}</p>}
+            </form>
+          )}
+
           <div className="payment-actions">
             {order.payment_method !== 'cash_on_delivery' && (
               <XpayeButton
@@ -196,7 +273,7 @@ export default function PaymentPage() {
                 email={user.email || ''}
                 firstName={firstName}
                 lastName={lastName}
-                phone={address?.phone || ''}
+                phone={paymentPhone.trim()}
                 description={`Paiement commande ${order.order_number || order.id}`}
                 merchantId={merchantId}
                 environment={xpayeEnvironment}
