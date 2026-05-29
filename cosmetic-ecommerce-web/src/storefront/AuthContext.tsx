@@ -4,6 +4,10 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
 import { AuthContext } from './authContextValue'
 
+function getSiteUrl() {
+  return (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '')
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -34,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${getSiteUrl()}/auth`,
       },
     })
     if (error) throw error
@@ -46,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     })
 
