@@ -10,6 +10,15 @@ type Product = {
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
+  if (products.length === 0) {
+    return (
+      <div className="empty-state inline">
+        <h2>Aucun produit disponible</h2>
+        <p>La sélection boutique sera bientôt mise à jour.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="grid">
       {products.map((product) => (

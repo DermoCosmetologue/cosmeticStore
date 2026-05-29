@@ -25,7 +25,67 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+update public.profiles
+set role = 'admin'
+where id = 'd18e634e-1642-4205-adf4-09a87cd3a8e9';
 
+select id
+from auth.users
+where email = 'yvannti@gmail.com';
+
+-- =========================================================
+-- STORAGE: PRODUCT IMAGES
+-- =========================================================
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'product-images',
+  'product-images',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update
+set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "product_images_storage_select_all" on storage.objects;
+create policy "product_images_storage_select_all"
+on storage.objects
+for select
+using (bucket_id = 'product-images');
+
+drop policy if exists "product_images_storage_admin_insert" on storage.objects;
+create policy "product_images_storage_admin_insert"
+on storage.objects
+for insert
+with check (
+  bucket_id = 'product-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
+
+drop policy if exists "product_images_storage_admin_update" on storage.objects;
+create policy "product_images_storage_admin_update"
+on storage.objects
+for update
+using (
+  bucket_id = 'product-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+)
+with check (
+  bucket_id = 'product-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
+
+drop policy if exists "product_images_storage_admin_delete" on storage.objects;
+create policy "product_images_storage_admin_delete"
+on storage.objects
+for delete
+using (
+  bucket_id = 'product-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
 -- =========================================================
 -- CATEGORIES
 -- =========================================================
@@ -94,6 +154,11 @@ create table if not exists public.addresses (
   updated_at timestamptz not null default now()
 );
 
+alter table public.addresses
+add column if not exists district text,
+add column if not exists postal_code text,
+add column if not exists address_line2 text;
+
 -- =========================================================
 -- CART ITEMS
 -- =========================================================
@@ -115,7 +180,7 @@ create table if not exists public.orders (
   order_number text unique,
   user_id uuid not null references public.profiles(id) on delete restrict,
   address_id uuid references public.addresses(id) on delete set null,
-  status text not null default 'pending' check (status in ('pending','paid','processing','shipped','delivered','cancelled','refunded')),
+  status text not null default 'pending_payment' check (status in ('pending_payment','pending','paid','processing','shipped','delivered','cancelled','refunded')),
   subtotal numeric(12,2) not null default 0 check (subtotal >= 0),
   shipping_fee numeric(12,2) not null default 0 check (shipping_fee >= 0),
   discount_amount numeric(12,2) not null default 0 check (discount_amount >= 0),
@@ -185,6 +250,168 @@ create table if not exists public.wishlist (
   created_at timestamptz not null default now(),
   unique (user_id, product_id)
 );
+
+create or replace function public.create_order_with_items(
+  p_user_id uuid,
+  p_address jsonb,
+  p_items jsonb,
+  p_payment_method text default null,
+  p_notes text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_address_id uuid;
+  v_order_id uuid;
+  v_subtotal numeric(12,2) := 0;
+  v_shipping_fee numeric(12,2) := 0;
+  v_discount_amount numeric(12,2) := 0;
+  v_total_amount numeric(12,2) := 0;
+  v_item jsonb;
+  v_product_id uuid;
+  v_product_price numeric(12,2);
+  v_product_stock integer;
+  v_product_name text;
+  v_product_thumbnail text;
+  v_qty integer;
+  v_unit_price numeric(12,2);
+begin
+  if auth.uid() is null or auth.uid() <> p_user_id then
+    raise exception 'Utilisateur non autorise pour cette commande';
+  end if;
+
+  if jsonb_array_length(p_items) = 0 then
+    raise exception 'Panier vide';
+  end if;
+
+  insert into public.profiles (id, full_name, role)
+  values (p_user_id, coalesce(nullif(p_address->>'full_name', ''), 'Client'), 'customer')
+  on conflict (id) do nothing;
+
+  insert into public.addresses (
+    user_id, label, full_name, phone, country, city, district,
+    postal_code, address_line1, address_line2, is_default
+  )
+  values (
+    p_user_id,
+    coalesce(p_address->>'label', 'Livraison'),
+    p_address->>'full_name',
+    p_address->>'phone',
+    coalesce(p_address->>'country', 'CI'),
+    p_address->>'city',
+    nullif(p_address->>'district', ''),
+    nullif(p_address->>'postal_code', ''),
+    p_address->>'address_line1',
+    nullif(p_address->>'address_line2', ''),
+    false
+  )
+  returning id into v_address_id;
+
+  insert into public.orders (
+    user_id,
+    address_id,
+    status,
+    subtotal,
+    shipping_fee,
+    discount_amount,
+    total_amount,
+    payment_method,
+    payment_status,
+    notes
+  )
+  values (
+    p_user_id,
+    v_address_id,
+    'pending_payment',
+    0,
+    0,
+    0,
+    0,
+    p_payment_method,
+    'unpaid',
+    p_notes
+  )
+  returning id into v_order_id;
+
+  for v_item in select * from jsonb_array_elements(p_items)
+  loop
+    select
+      p.id,
+      p.price,
+      p.stock,
+      p.name,
+      (
+        select pi.image_url
+        from public.product_images pi
+        where pi.product_id = p.id
+        order by pi.sort_order asc, pi.created_at asc
+        limit 1
+      ) as thumbnail
+    into v_product_id, v_product_price, v_product_stock, v_product_name, v_product_thumbnail
+    from public.products p
+    where p.id = (v_item->>'product_id')::uuid
+      and p.is_active = true;
+
+    if not found then
+      raise exception 'Produit introuvable';
+    end if;
+
+    v_qty := coalesce((v_item->>'quantity')::int, 1);
+
+    if v_product_stock < v_qty then
+      raise exception 'Stock insuffisant pour le produit %', v_product_name;
+    end if;
+
+    v_unit_price := v_product_price;
+
+    insert into public.order_items (
+      order_id,
+      product_id,
+      product_name,
+      product_image,
+      unit_price,
+      quantity,
+      line_total
+    )
+    values (
+      v_order_id,
+      v_product_id,
+      v_product_name,
+      v_product_thumbnail,
+      v_unit_price,
+      v_qty,
+      v_unit_price * v_qty
+    );
+
+    v_subtotal := v_subtotal + (v_unit_price * v_qty);
+
+    update public.products
+    set stock = stock - v_qty
+    where id = v_product_id;
+  end loop;
+
+  v_shipping_fee := 0;
+  v_discount_amount := 0;
+  v_total_amount := v_subtotal + v_shipping_fee - v_discount_amount;
+
+  update public.orders
+  set subtotal = v_subtotal,
+      shipping_fee = v_shipping_fee,
+      discount_amount = v_discount_amount,
+      total_amount = v_total_amount
+  where id = v_order_id;
+
+  delete from public.cart_items
+  where user_id = p_user_id;
+
+  return v_order_id;
+end;
+$$;
+
+grant execute on function public.create_order_with_items(uuid, jsonb, jsonb, text, text) to authenticated;
 
 -- =========================================================
 -- INDEXES
@@ -537,3 +764,13 @@ select
   ) as thumbnail
 from public.products p
 join public.categories c on c.id = p.category_id;
+
+alter table public.addresses
+add column if not exists district text,
+add column if not exists postal_code text,
+add column if not exists address_line2 text;
+
+alter table public.orders
+add column if not exists payment_status text default 'unpaid',
+add column if not exists payment_provider text,
+add column if not exists payment_reference text;

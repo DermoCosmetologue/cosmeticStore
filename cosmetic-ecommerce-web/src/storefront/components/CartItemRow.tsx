@@ -12,13 +12,14 @@ type CartItem = {
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCart()
+  const formattedPrice = `${item.price.toLocaleString('fr-FR')} FCFA`
 
   return (
     <div className="cart-row">
       <img src={item.thumbnail || '/placeholder.png'} alt={item.name} />
       <div className="cart-row-info">
         <h3>{item.name}</h3>
-        <p>{item.price} FCFA</p>
+        <p>{formattedPrice}</p>
       </div>
 
       <QuantitySelector
@@ -27,7 +28,9 @@ export default function CartItemRow({ item }: { item: CartItem }) {
         onDecrease={() => updateQuantity(item.id, item.quantity - 1)}
       />
 
-      <button onClick={() => removeFromCart(item.id)}>Supprimer</button>
+      <button className="btn-text danger" onClick={() => removeFromCart(item.id)}>
+        Supprimer
+      </button>
     </div>
   )
 }

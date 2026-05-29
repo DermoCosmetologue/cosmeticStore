@@ -31,12 +31,19 @@ export default function CatalogPage() {
     fetchProducts()
   }, [])
 
-  if (loading) return <p>Chargement...</p>
-
   return (
-    <div>
-      <h2>Catalogue</h2>
-      <ProductGrid products={products} />
-    </div>
+    <section className="container catalog-page">
+      <div className="page-heading">
+        <span className="eyebrow">Boutique</span>
+        <h1>Catalogue beauté</h1>
+        <p>Des essentiels sélectionnés pour construire une routine soignée, sensorielle et efficace.</p>
+      </div>
+
+      {loading ? (
+        <div className="loading-card">Chargement des produits...</div>
+      ) : (
+        <ProductGrid products={products} />
+      )}
+    </section>
   )
 }
