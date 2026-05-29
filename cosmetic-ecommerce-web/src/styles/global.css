@@ -259,6 +259,51 @@ input:focus {
   line-height: 1;
 }
 
+.cart-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 92px;
+  z-index: 60;
+  display: flex;
+  max-width: min(420px, calc(100vw - 32px));
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(111, 133, 104, 0.26);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+  padding: 0.9rem 1rem;
+}
+
+.cart-toast div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.cart-toast strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.cart-toast span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-toast a {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 850;
+  padding: 0.65rem 0.85rem;
+}
+
 .main-content {
   min-height: calc(100vh - 245px);
 }
@@ -2405,6 +2450,21 @@ input:focus {
 
   .nav .cart-count {
     margin-left: auto;
+  }
+
+  .cart-toast {
+    right: 14px;
+    bottom: 78px;
+    left: 14px;
+    max-width: none;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .cart-toast a {
+    width: 100%;
+    text-align: center;
   }
 
   .whatsapp-float {

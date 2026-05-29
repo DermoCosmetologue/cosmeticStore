@@ -84,9 +84,18 @@ export async function getOrders() {
 }
 
 export async function updateOrderStatus(orderId: string, status: AdminOrderStatus) {
+  const patch: {
+    status: AdminOrderStatus
+    payment_status?: AdminPaymentStatus
+  } = { status }
+
+  if (status === 'processing') {
+    patch.payment_status = 'pending'
+  }
+
   const { data, error } = await supabase
     .from('orders')
-    .update({ status })
+    .update(patch)
     .eq('id', orderId)
     .select()
 
