@@ -52,11 +52,27 @@ function NavIcon({ name }: { name: NavIconName }) {
   )
 }
 
+function WhatsAppIcon() {
+  return (
+    <svg className="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M20.5 11.8A8.5 8.5 0 0 1 8 19.3L3.5 20.5 4.7 16A8.5 8.5 0 1 1 20.5 11.8Z" />
+      <path d="M8.8 8.2c.2-.5.4-.5.7-.5h.5c.2 0 .4 0 .5.4l.7 1.6c.1.3.1.5-.1.7l-.4.5c-.1.1-.2.3 0 .6.5.9 1.3 1.7 2.3 2.2.3.2.5.1.6 0l.7-.8c.2-.2.4-.2.7-.1l1.5.7c.3.1.4.3.4.6 0 .6-.5 1.4-1 1.7-.6.4-1.7.5-3.4-.2-2.9-1.2-4.8-4-5-5.8-.1-.8.1-1.4.4-1.8Z" />
+    </svg>
+  )
+}
+
 export default function MainLayout() {
   const { totalItems } = useCart()
   const { user, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE?.replace(/\D/g, '')
+  const whatsappMessage =
+    import.meta.env.VITE_WHATSAPP_MESSAGE ||
+    'Bonjour, je souhaite avoir des informations sur vos produits.'
+  const whatsappUrl = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`
+    : ''
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -135,6 +151,19 @@ export default function MainLayout() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {whatsappUrl && (
+        <a
+          href={whatsappUrl}
+          className="whatsapp-float"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Contacter la boutique sur WhatsApp"
+        >
+          <WhatsAppIcon />
+          <span>WhatsApp</span>
+        </a>
+      )}
 
       <footer className="footer">
         <div className="container footer-inner">

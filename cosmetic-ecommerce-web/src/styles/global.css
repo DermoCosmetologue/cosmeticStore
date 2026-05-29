@@ -263,6 +263,39 @@ input:focus {
   min-height: calc(100vh - 245px);
 }
 
+.whatsapp-float {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 25;
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 900;
+  padding: 0 1rem;
+  box-shadow: 0 16px 34px rgba(18, 140, 126, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.whatsapp-float:hover {
+  box-shadow: 0 18px 42px rgba(18, 140, 126, 0.34);
+  transform: translateY(-2px);
+}
+
+.whatsapp-icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .hero-section {
   position: relative;
   display: grid;
@@ -2344,6 +2377,22 @@ input:focus {
 
   .nav .cart-count {
     margin-left: auto;
+  }
+
+  .whatsapp-float {
+    right: 14px;
+    bottom: 14px;
+    width: 54px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .whatsapp-float span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
   }
 
   .hero-section {
