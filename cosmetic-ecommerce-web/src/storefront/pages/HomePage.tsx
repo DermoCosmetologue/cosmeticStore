@@ -5,6 +5,7 @@ import heroImage from '../../assets/hero.png'
 import { DEFAULT_HOME_CONTENT } from '../homepageContent'
 import type { HomeContent } from '../homepageContent'
 import { fetchHomeContent } from '../homepageService'
+import ProductCard from '../components/products/ProductCard'
 
 type FeaturedProduct = {
   id: string
@@ -25,6 +26,7 @@ type HomeCategory = {
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([])
+  const [showcaseProducts, setShowcaseProducts] = useState<FeaturedProduct[]>([])
   const [categories, setCategories] = useState<HomeCategory[]>([])
   const [homeContent, setHomeContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT)
 
@@ -54,6 +56,22 @@ export default function HomePage() {
     }
 
     void fetchFeaturedProducts()
+  }, [])
+
+  useEffect(() => {
+    const fetchShowcaseProducts = async () => {
+      const { data, error } = await supabase
+        .from('storefront_products')
+        .select('id, name, slug, short_description, price, thumbnail')
+        .eq('is_active', true)
+        .limit(10)
+
+      if (!error && data) {
+        setShowcaseProducts(data as FeaturedProduct[])
+      }
+    }
+
+    void fetchShowcaseProducts()
   }, [])
 
   useEffect(() => {
@@ -159,6 +177,27 @@ export default function HomePage() {
                 <h3>{category.name}</h3>
                 {category.description && <p>{category.description}</p>}
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {showcaseProducts.length > 0 && (
+        <section className="container section-block home-product-showcase">
+          <div className="home-showcase-heading">
+            <div className="section-heading">
+              <span className="eyebrow">Vitrine</span>
+              <h2>Les essentiels a faire defiler.</h2>
+              <p>Un apercu rapide des soins, parfums et routines disponibles dans la boutique.</p>
+            </div>
+            <Link to="/catalog" className="btn-ghost">Tout voir</Link>
+          </div>
+
+          <div className="home-product-rail" aria-label="Produits boutique">
+            {showcaseProducts.map((product) => (
+              <div className="home-product-slide" key={product.id}>
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         </section>
