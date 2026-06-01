@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useCart } from '../context/useCart'
+import { useWishlist } from '../context/useWishlist'
 
 type Product = {
   id: string
@@ -16,6 +17,7 @@ type Product = {
 export default function ProductDetailsPage() {
   const { slug } = useParams()
   const { addToCart } = useCart()
+  const { isInWishlist, toggleWishlist } = useWishlist()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -54,6 +56,8 @@ export default function ProductDetailsPage() {
     )
   }
 
+  const isFavorite = isInWishlist(product.id)
+
   return (
     <section className="container product-details">
       <div className="product-detail-media">
@@ -64,20 +68,39 @@ export default function ProductDetailsPage() {
         <h1>{product.name}</h1>
         <p>{product.description || product.short_description}</p>
         <strong>{product.price.toLocaleString('fr-FR')} FCFA</strong>
-        <button
-          className="btn-primary"
-          onClick={() =>
-            addToCart({
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              slug: product.slug,
-              thumbnail: product.thumbnail,
-            })
-          }
-        >
-          Ajouter au panier
-        </button>
+        <div className="product-detail-actions">
+          <button
+            className="btn-primary"
+            onClick={() =>
+              addToCart({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                slug: product.slug,
+                thumbnail: product.thumbnail,
+              })
+            }
+          >
+            Ajouter au panier
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-pressed={isFavorite}
+            onClick={() =>
+              toggleWishlist({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                slug: product.slug,
+                thumbnail: product.thumbnail,
+                short_description: product.short_description,
+              })
+            }
+          >
+            {isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          </button>
+        </div>
       </div>
     </section>
   )

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import heroImage from '../../assets/hero.png'
+import { DEFAULT_HOME_CONTENT } from '../homepageContent'
+import type { HomeContent } from '../homepageContent'
+import { fetchHomeContent } from '../homepageService'
 
 type FeaturedProduct = {
   id: string
@@ -12,58 +15,9 @@ type FeaturedProduct = {
   thumbnail: string | null
 }
 
-const features = [
-  { value: '48h', label: 'Livraison urbaine' },
-  { value: '+80', label: 'References beaute' },
-  { value: '4.9', label: 'Note moyenne' },
-]
-
-const collections = [
-  {
-    name: 'Soins visage',
-    text: 'Textures fines, actifs precis et resultats visibles au quotidien.',
-  },
-  {
-    name: 'Parfums signature',
-    text: 'Sillages elegants pour les moments qui meritent une empreinte.',
-  },
-  {
-    name: 'Glow routine',
-    text: 'Essentiels eclat pour une peau lumineuse sans surcharge.',
-  },
-  {
-    name: 'Coffrets premium',
-    text: 'Idees cadeaux et routines completes pretes a offrir.',
-  },
-]
-
-const rituals = [
-  'Nettoyer avec douceur',
-  'Hydrater en profondeur',
-  'Illuminer le teint',
-  'Signer avec un parfum',
-]
-
-const luxuryPicks = [
-  {
-    title: 'Edition peau parfaite',
-    label: 'Routine complete',
-    price: 'A partir de 18 000 FCFA',
-  },
-  {
-    title: 'Parfum de soiree',
-    label: 'Signature intense',
-    price: 'A partir de 25 000 FCFA',
-  },
-  {
-    title: 'Coffret eclat',
-    label: 'Selection cadeau',
-    price: 'A partir de 32 000 FCFA',
-  },
-]
-
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([])
+  const [homeContent, setHomeContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT)
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -95,154 +49,173 @@ export default function HomePage() {
     void fetchFeaturedProducts()
   }, [])
 
+  useEffect(() => {
+    const loadHomeContent = async () => {
+      const settings = await fetchHomeContent()
+      setHomeContent(settings)
+    }
+
+    void loadHomeContent()
+  }, [])
+
+  const heroSrc = homeContent.hero.image_url || heroImage
+  const editorialSrc = homeContent.editorial.image_url || heroImage
+
   return (
     <>
       <section className="hero-section">
-        <img src={heroImage} alt="Selection de cosmetiques premium" />
+        <img src={heroSrc} alt="Selection de cosmetiques premium" />
         <div className="hero-overlay" />
 
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">Nouvelle selection 2026</span>
-            <h1>Cosmetiques premium pour une routine beaute elegante.</h1>
-            <p>
-              Decouvrez des soins, parfums et essentiels beaute choisis pour leur
-              efficacite, leur texture et leur finition luxueuse.
-            </p>
+            <span className="eyebrow">{homeContent.hero.eyebrow}</span>
+            <h1>{homeContent.hero.title}</h1>
+            <p>{homeContent.hero.text}</p>
             <div className="hero-actions">
-              <Link to="/catalog" className="btn-primary">Explorer la boutique</Link>
-              <Link to="/catalog" className="btn-ghost">Voir les nouveautes</Link>
+              <Link to="/catalog" className="btn-primary">{homeContent.hero.primary_label}</Link>
+              <Link to="/catalog" className="btn-ghost">{homeContent.hero.secondary_label}</Link>
             </div>
           </div>
 
           <div className="hero-badge" aria-label="Mise en avant boutique">
-            <strong>Routine complete</strong>
-            <span>Soins, parfums et accessoires</span>
+            <strong>{homeContent.hero.badge_title}</strong>
+            <span>{homeContent.hero.badge_text}</span>
           </div>
         </div>
       </section>
 
-      <section className="container stats-band" aria-label="Avantages boutique">
-        {features.map((feature) => (
-          <div key={feature.label}>
-            <strong>{feature.value}</strong>
-            <span>{feature.label}</span>
-          </div>
-        ))}
-      </section>
-
-      <section className="container section-block">
-        <div className="section-heading">
-          <span className="eyebrow">Collections</span>
-          <h2>Un shopping beaute plus clair, plus rapide, plus premium.</h2>
-        </div>
-        <div className="collection-grid">
-          {collections.map((collection) => (
-            <Link to="/catalog" className="collection-card" key={collection.name}>
-              <span>{collection.name}</span>
-              <p>{collection.text}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="luxury-editorial">
-        <div className="container luxury-editorial-inner">
-          <div className="section-heading">
-            <span className="eyebrow">Maison beaute</span>
-            <h2>Une selection inspiree des comptoirs premium.</h2>
-          </div>
-
-          <div className="editorial-panel">
-            <img src={heroImage} alt="Details de cosmetiques luxe" />
-            <div>
-              <span className="eyebrow">Selection experte</span>
-              <h3>Des essentiels choisis pour la sensation, la tenue et le fini.</h3>
-              <p>
-                Chaque produit est pense pour trouver sa place dans une routine simple:
-                soin net, parfum juste, geste efficace et presentation soignee.
-              </p>
-              <Link to="/catalog" className="btn-primary">Decouvrir les essentiels</Link>
+      {homeContent.visibility.stats && (
+        <section className="container stats-band" aria-label="Avantages boutique">
+          {homeContent.features.map((feature) => (
+            <div key={feature.label}>
+              <strong>{feature.value}</strong>
+              <span>{feature.label}</span>
             </div>
-          </div>
-        </div>
-      </section>
+          ))}
+        </section>
+      )}
 
-      <section className="container section-block">
-        <div className="section-heading">
-          <span className="eyebrow">Selections</span>
-          <h2>Les pieces fortes du moment.</h2>
-        </div>
-
-        <div className="luxury-picks-grid">
-          {featuredProducts.length > 0 ? (
-            featuredProducts.map((product) => (
-              <Link to={`/product/${product.slug}`} className="luxury-pick" key={product.id}>
-                <img src={product.thumbnail || heroImage} alt={product.name} />
-                <span>Selection premium</span>
-                <h3>{product.name}</h3>
-                <p>{Number(product.price || 0).toLocaleString('fr-FR')} FCFA</p>
-              </Link>
-            ))
-          ) : (
-            luxuryPicks.map((pick) => (
-              <Link to="/catalog" className="luxury-pick" key={pick.title}>
-                <img src={heroImage} alt={pick.title} />
-                <span>{pick.label}</span>
-                <h3>{pick.title}</h3>
-                <p>{pick.price}</p>
-              </Link>
-            ))
-          )}
-        </div>
-      </section>
-
-      <section className="ritual-section">
-        <div className="container ritual-layout">
+      {homeContent.visibility.collections && (
+        <section className="container section-block">
           <div className="section-heading">
-            <span className="eyebrow">Rituel</span>
-            <h2>Composer une routine elegante en quatre gestes.</h2>
+            <span className="eyebrow">Collections</span>
+            <h2>Un shopping beaute plus clair, plus rapide, plus premium.</h2>
           </div>
-
-          <div className="ritual-list">
-            {rituals.map((ritual, index) => (
-              <Link to="/catalog" className="ritual-item" key={ritual}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{ritual}</strong>
+          <div className="collection-grid">
+            {homeContent.collections.map((collection) => (
+              <Link
+                to="/catalog"
+                className={`collection-card ${collection.image_url ? 'has-image' : ''}`}
+                key={collection.name}
+              >
+                {collection.image_url && <img src={collection.image_url} alt={collection.name} />}
+                <span>{collection.name}</span>
+                <p>{collection.text}</p>
               </Link>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="container maison-service">
-        <div>
-          <span className="eyebrow">Service premium</span>
-          <h2>Une experience soignee, du panier a la reception.</h2>
-        </div>
-        <div className="service-grid">
-          <div>
-            <strong>Paiement securise</strong>
-            <span>XPAYE, carte et mobile money selon disponibilite.</span>
-          </div>
-          <div>
-            <strong>Preparation attentive</strong>
-            <span>Commande verifiee avant expedition.</span>
-          </div>
-          <div>
-            <strong>Suivi client</strong>
-            <span>Historique et statut accessibles depuis votre compte.</span>
-          </div>
-        </div>
-      </section>
+      {homeContent.visibility.editorial && (
+        <section className="luxury-editorial">
+          <div className="container luxury-editorial-inner">
+            <div className="section-heading">
+              <span className="eyebrow">{homeContent.editorial.eyebrow}</span>
+              <h2>{homeContent.editorial.title}</h2>
+            </div>
 
-      <section className="final-cta">
-        <div className="container final-cta-inner">
-          <span className="eyebrow">Boutique</span>
-          <h2>Trouvez la routine qui signe votre style.</h2>
-          <Link to="/catalog" className="btn-primary">Entrer dans le catalogue</Link>
-        </div>
-      </section>
+            <div className="editorial-panel">
+              <img src={editorialSrc} alt="Details de cosmetiques luxe" />
+              <div>
+                <span className="eyebrow">{homeContent.editorial.label}</span>
+                <h3>{homeContent.editorial.heading}</h3>
+                <p>{homeContent.editorial.text}</p>
+                <Link to="/catalog" className="btn-primary">{homeContent.editorial.button_label}</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {homeContent.visibility.featured && (
+        <section className="container section-block">
+          <div className="section-heading">
+            <span className="eyebrow">{homeContent.featured.eyebrow}</span>
+            <h2>{homeContent.featured.title}</h2>
+          </div>
+
+          <div className="luxury-picks-grid">
+            {featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <Link to={`/product/${product.slug}`} className="luxury-pick" key={product.id}>
+                  <img src={product.thumbnail || heroImage} alt={product.name} />
+                  <span>Selection premium</span>
+                  <h3>{product.name}</h3>
+                  <p>{Number(product.price || 0).toLocaleString('fr-FR')} FCFA</p>
+                </Link>
+              ))
+            ) : (
+              homeContent.fallback_picks.map((pick) => (
+                <Link to="/catalog" className="luxury-pick" key={pick.title}>
+                  <img src={pick.image_url || heroImage} alt={pick.title} />
+                  <span>{pick.label}</span>
+                  <h3>{pick.title}</h3>
+                  <p>{pick.price}</p>
+                </Link>
+              ))
+            )}
+          </div>
+        </section>
+      )}
+
+      {homeContent.visibility.ritual && (
+        <section className="ritual-section">
+          <div className="container ritual-layout">
+            <div className="section-heading">
+              <span className="eyebrow">{homeContent.ritual.eyebrow}</span>
+              <h2>{homeContent.ritual.title}</h2>
+            </div>
+
+            <div className="ritual-list">
+              {homeContent.ritual.items.map((ritual, index) => (
+                <Link to="/catalog" className="ritual-item" key={ritual.title}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <strong>{ritual.title}</strong>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {homeContent.visibility.service && (
+        <section className="container maison-service">
+          <div>
+            <span className="eyebrow">{homeContent.service.eyebrow}</span>
+            <h2>{homeContent.service.title}</h2>
+          </div>
+          <div className="service-grid">
+            {homeContent.service.items.map((item) => (
+              <div key={item.title}>
+                <strong>{item.title}</strong>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {homeContent.visibility.final_cta && (
+        <section className="final-cta">
+          <div className="container final-cta-inner">
+            <span className="eyebrow">{homeContent.final_cta.eyebrow}</span>
+            <h2>{homeContent.final_cta.title}</h2>
+            <Link to="/catalog" className="btn-primary">{homeContent.final_cta.button_label}</Link>
+          </div>
+        </section>
+      )}
     </>
   )
 }

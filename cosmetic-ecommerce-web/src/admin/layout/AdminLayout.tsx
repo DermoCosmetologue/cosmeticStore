@@ -7,6 +7,7 @@ export default function AdminLayout() {
         <h2>Admin</h2>
         <nav>
           <Link to="/admin">Dashboard</Link>
+          <Link to="/admin/homepage">Page d'accueil</Link>
           <Link to="/admin/categories">Categories</Link>
           <Link to="/admin/products">Produits</Link>
           <Link to="/admin/inventory">Stock</Link>

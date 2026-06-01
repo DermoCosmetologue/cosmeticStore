@@ -33,6 +33,10 @@ function getCheckoutErrorMessage(error: unknown) {
     return "Supabase bloque l'enregistrement. Verifiez les politiques RLS et la fonction de commande."
   }
 
+  if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+    return "Impossible de joindre Supabase. Verifiez votre connexion, puis rechargez la page avant de reessayer."
+  }
+
   return message || "Erreur lors de l'enregistrement de la commande."
 }
 

@@ -529,6 +529,7 @@ input:focus {
 .section-block,
 .catalog-page,
 .cart-page,
+.wishlist-page,
 .checkout-page,
 .product-details,
 .empty-state {
@@ -563,10 +564,12 @@ input:focus {
 }
 
 .collection-card {
+  position: relative;
   display: grid;
   gap: 0.75rem;
   min-height: 154px;
   align-content: end;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
@@ -577,19 +580,54 @@ input:focus {
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
+.collection-card.has-image {
+  min-height: 230px;
+  background: #1c1b1a;
+  color: #fff;
+}
+
+.collection-card.has-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(21, 21, 21, 0.04), rgba(21, 21, 21, 0.82));
+}
+
+.collection-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.28s ease;
+}
+
+.collection-card.has-image:hover img {
+  transform: scale(1.04);
+}
+
 .collection-card:hover {
   border-color: rgba(184, 138, 68, 0.55);
   transform: translateY(-3px);
 }
 
 .collection-card span {
+  position: relative;
+  z-index: 1;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.45rem;
   line-height: 1.1;
 }
 
 .collection-card p {
+  position: relative;
+  z-index: 1;
   font-size: 0.92rem;
+}
+
+.collection-card.has-image span,
+.collection-card.has-image p {
+  color: #fff;
 }
 
 .luxury-editorial,
@@ -923,6 +961,48 @@ input:focus {
   font-size: 1.05rem;
 }
 
+.product-card-actions,
+.product-detail-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.product-card-actions .btn-secondary {
+  flex: 1;
+}
+
+.wishlist-button {
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--muted);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.wishlist-button:hover,
+.wishlist-button.active {
+  border-color: rgba(201, 111, 125, 0.44);
+  background: rgba(201, 111, 125, 0.1);
+  color: var(--rose);
+  transform: translateY(-1px);
+}
+
+.wishlist-button svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .product-details {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.75fr);
@@ -956,6 +1036,15 @@ input:focus {
 
 .product-detail-copy .btn-primary {
   width: max-content;
+}
+
+.product-detail-actions {
+  flex-wrap: wrap;
+}
+
+.product-detail-actions .btn-secondary {
+  width: max-content;
+  padding: 0 1.1rem;
 }
 
 .account-layout {
@@ -1152,6 +1241,21 @@ input:focus {
 .cart-row-info p {
   color: var(--gold);
   font-weight: 800;
+}
+
+.wishlist-row {
+  grid-template-columns: 92px minmax(0, 1fr) auto auto;
+}
+
+.wishlist-row .cart-row-info span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.wishlist-row .btn-secondary {
+  width: max-content;
+  min-width: 160px;
 }
 
 .qty-selector {
@@ -1431,6 +1535,10 @@ input:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 0.7rem;
+}
+
+.payment-actions .auth-notice {
+  width: 100%;
 }
 
 .payment-note {
@@ -1883,6 +1991,19 @@ input:focus {
   display: grid;
   gap: 0.9rem;
   padding: 1rem;
+}
+
+.homepage-admin-form {
+  max-width: 980px;
+}
+
+.admin-nested-card {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  padding: 0.85rem;
 }
 
 .admin-product-form {
@@ -2509,6 +2630,7 @@ input:focus {
   .ritual-section,
   .catalog-page,
   .cart-page,
+  .wishlist-page,
   .checkout-page,
   .auth-page,
   .account-page,
@@ -2553,7 +2675,8 @@ input:focus {
   }
 
   .cart-row .qty-selector,
-  .cart-row .btn-text {
+  .cart-row .btn-text,
+  .wishlist-row .btn-secondary {
     grid-column: 2;
   }
 

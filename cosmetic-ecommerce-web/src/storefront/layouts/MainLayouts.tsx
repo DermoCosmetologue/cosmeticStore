@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/useCart'
+import { useWishlist } from '../context/useWishlist'
 import { useAuth } from '../useAuth'
 
-type NavIconName = 'home' | 'catalog' | 'cart' | 'profile' | 'orders' | 'login' | 'logout'
+type NavIconName = 'home' | 'catalog' | 'wishlist' | 'cart' | 'profile' | 'orders' | 'login' | 'logout'
 
 function NavIcon({ name }: { name: NavIconName }) {
   const paths: Record<NavIconName, string[]> = {
@@ -16,6 +17,9 @@ function NavIcon({ name }: { name: NavIconName }) {
       'M4 7h16',
       'M6 7l1 13h10l1-13',
       'M9 7a3 3 0 0 1 6 0',
+    ],
+    wishlist: [
+      'M20.8 8.6c0 5.1-8.8 10.4-8.8 10.4S3.2 13.7 3.2 8.6A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8.8 2.2Z',
     ],
     cart: [
       'M4 5h2l2 10h9l2-7H7',
@@ -63,6 +67,7 @@ function WhatsAppIcon() {
 
 export default function MainLayout() {
   const { totalItems } = useCart()
+  const { totalItems: wishlistItems } = useWishlist()
   const { user, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -119,6 +124,11 @@ export default function MainLayout() {
               <NavIcon name="cart" />
               Panier
               <span className="cart-count">{totalItems}</span>
+            </NavLink>
+            <NavLink to="/wishlist" className={navLinkClass} onClick={closeMenu}>
+              <NavIcon name="wishlist" />
+              Favoris
+              <span className="cart-count">{wishlistItems}</span>
             </NavLink>
 
             {!loading && (
@@ -177,6 +187,7 @@ export default function MainLayout() {
 
           <div className="footer-links">
             <Link to="/catalog">Catalogue</Link>
+            <Link to="/wishlist">Favoris</Link>
             <Link to="/cart">Panier</Link>
           </div>
         </div>

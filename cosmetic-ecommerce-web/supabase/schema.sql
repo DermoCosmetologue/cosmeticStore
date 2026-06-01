@@ -86,6 +86,57 @@ using (
   bucket_id = 'product-images'
   and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
 );
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'homepage-images',
+  'homepage-images',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update
+set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "homepage_images_storage_select_all" on storage.objects;
+create policy "homepage_images_storage_select_all"
+on storage.objects
+for select
+using (bucket_id = 'homepage-images');
+
+drop policy if exists "homepage_images_storage_admin_insert" on storage.objects;
+create policy "homepage_images_storage_admin_insert"
+on storage.objects
+for insert
+with check (
+  bucket_id = 'homepage-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
+
+drop policy if exists "homepage_images_storage_admin_update" on storage.objects;
+create policy "homepage_images_storage_admin_update"
+on storage.objects
+for update
+using (
+  bucket_id = 'homepage-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+)
+with check (
+  bucket_id = 'homepage-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
+
+drop policy if exists "homepage_images_storage_admin_delete" on storage.objects;
+create policy "homepage_images_storage_admin_delete"
+on storage.objects
+for delete
+using (
+  bucket_id = 'homepage-images'
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+);
 -- =========================================================
 -- CATEGORIES
 -- =========================================================
@@ -249,6 +300,17 @@ create table if not exists public.wishlist (
   product_id uuid not null references public.products(id) on delete cascade,
   created_at timestamptz not null default now(),
   unique (user_id, product_id)
+);
+
+-- =========================================================
+-- HOMEPAGE SETTINGS
+-- =========================================================
+create table if not exists public.homepage_settings (
+  id text primary key default 'main',
+  settings jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint homepage_settings_singleton check (id = 'main')
 );
 
 create or replace function public.create_order_with_items(
@@ -472,6 +534,11 @@ create trigger trg_reviews_updated_at
 before update on public.reviews
 for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_homepage_settings_updated_at on public.homepage_settings;
+create trigger trg_homepage_settings_updated_at
+before update on public.homepage_settings
+for each row execute function public.set_updated_at();
+
 -- =========================================================
 -- PROFILE AUTO-CREATION ON SIGNUP
 -- =========================================================
@@ -537,6 +604,7 @@ alter table public.order_items enable row level security;
 alter table public.payments enable row level security;
 alter table public.reviews enable row level security;
 alter table public.wishlist enable row level security;
+alter table public.homepage_settings enable row level security;
 
 -- =========================================================
 -- POLICIES: PROFILES
@@ -733,6 +801,22 @@ on public.wishlist
 for all
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+-- =========================================================
+-- POLICIES: HOMEPAGE SETTINGS
+-- =========================================================
+drop policy if exists "homepage_settings_select_all" on public.homepage_settings;
+create policy "homepage_settings_select_all"
+on public.homepage_settings
+for select
+using (true);
+
+drop policy if exists "homepage_settings_admin_write" on public.homepage_settings;
+create policy "homepage_settings_admin_write"
+on public.homepage_settings
+for all
+using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- =========================================================
 -- STOREFRONT VIEW

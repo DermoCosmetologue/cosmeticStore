@@ -142,7 +142,7 @@ export default function PaymentPage() {
     const normalizedPhone = paymentPhone.trim()
 
     if (!normalizedPhone) {
-      setErrorMessage('Renseignez un numero de telephone pour payer avec XPAYE.')
+      setErrorMessage('Renseignez un numero de telephone pour payer en ligne.')
       setSuccessMessage('')
       return
     }
@@ -175,7 +175,7 @@ export default function PaymentPage() {
           ? order.addresses.map((item, index) => (index === 0 ? { ...item, phone: normalizedPhone } : item))
           : nextAddress,
       })
-      setSuccessMessage('Numero enregistre pour le paiement XPAYE.')
+      setSuccessMessage('Numero enregistre pour le paiement en ligne.')
     }
 
     setSavingPhone(false)
@@ -246,7 +246,7 @@ export default function PaymentPage() {
           {order.payment_method !== 'cash_on_delivery' && (
             <form className="payment-phone-form" onSubmit={handleSavePaymentPhone}>
               <label>
-                Numero pour XPAYE
+                Numero pour paiement mobile
                 <input
                   type="tel"
                   value={paymentPhone}
@@ -266,7 +266,7 @@ export default function PaymentPage() {
           )}
 
           <div className="payment-actions">
-            {order.payment_method !== 'cash_on_delivery' && (
+            {order.payment_method !== 'cash_on_delivery' && order.payment_status !== 'paid' && (
               <XpayeButton
                 amount={Number(order.total_amount || 0)}
                 referenceNumber={order.order_number || order.id}
@@ -278,7 +278,7 @@ export default function PaymentPage() {
                 merchantId={merchantId}
                 environment={xpayeEnvironment}
                 orderId={order.id}
-                label="Payer maintenant"
+                label="Payer avec XPAYE"
               />
             )}
             {order.payment_status !== 'paid' && (
@@ -296,9 +296,9 @@ export default function PaymentPage() {
         </article>
 
         <aside className="payment-note">
-          <span className="eyebrow">XPAYE</span>
+          <span className="eyebrow">Paiement mobile</span>
           <p>
-            Payez en ligne avec XPAYE ou choisissez le paiement a la livraison.
+            Payez avec XPAYE ou choisissez le paiement a la livraison.
           </p>
         </aside>
       </div>

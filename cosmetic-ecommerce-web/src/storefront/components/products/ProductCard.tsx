@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/useCart'
+import { useWishlist } from '../../context/useWishlist'
 
 type Product = {
   id: string
@@ -12,7 +13,9 @@ type Product = {
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart()
+  const { isInWishlist, toggleWishlist } = useWishlist()
   const formattedPrice = `${product.price.toLocaleString('fr-FR')} FCFA`
+  const isFavorite = isInWishlist(product.id)
 
   return (
     <div className="product-card">
@@ -28,20 +31,42 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      <button
-        className="btn-secondary"
-        onClick={() =>
-          addToCart({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            slug: product.slug,
-            thumbnail: product.thumbnail,
-          })
-        }
-      >
-        Ajouter au panier
-      </button>
+      <div className="product-card-actions">
+        <button
+          type="button"
+          className={`wishlist-button ${isFavorite ? 'active' : ''}`}
+          aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          aria-pressed={isFavorite}
+          onClick={() =>
+            toggleWishlist({
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              slug: product.slug,
+              thumbnail: product.thumbnail,
+              short_description: product.short_description,
+            })
+          }
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20.8 8.6c0 5.1-8.8 10.4-8.8 10.4S3.2 13.7 3.2 8.6A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8.8 2.2Z" />
+          </svg>
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() =>
+            addToCart({
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              slug: product.slug,
+              thumbnail: product.thumbnail,
+            })
+          }
+        >
+          Ajouter au panier
+        </button>
+      </div>
     </div>
   )
 }

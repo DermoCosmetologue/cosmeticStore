@@ -5,6 +5,7 @@ import CategoriesPage from '../categories/CategoriesPage'
 import ProductsPage from '../products/ProductsPage'
 import OrdersPage from '../orders/OrdersPage'
 import InventoryPage from '../inventory/Inventorypage'
+import HomepageAdminPage from '../homepage/HomepageAdminPage'
 import RequireAdmin from '../auth/RequireAdmin'
 
 export default function AdminRoutes() {
@@ -15,6 +16,7 @@ export default function AdminRoutes() {
         <Route path="dashboard" element={<Navigate to="/admin" replace />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="homepage" element={<HomepageAdminPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="orders" element={<OrdersPage />} />
       </Route>
