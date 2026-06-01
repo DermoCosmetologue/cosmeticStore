@@ -187,6 +187,7 @@ export default function MainLayout() {
               <span>SyShine Cosmetic</span>
             </Link>
             <p>Beaute premium, selectionnee avec soin par SyShine Cosmetic.</p>
+            <p className="footer-signature">Conçu par Yvannti T.I KOUAME - Copyright 2026</p>
           </div>
 
           <div className="footer-links">

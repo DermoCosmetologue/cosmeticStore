@@ -2081,6 +2081,11 @@ input:focus {
   color: rgba(255, 255, 255, 0.68);
 }
 
+.footer-signature {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.52);
+}
+
 .footer-links {
   display: flex;
   gap: 1rem;
