@@ -630,6 +630,98 @@ input:focus {
   color: #fff;
 }
 
+.catalog-filter-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(180px, 0.8fr) minmax(160px, 0.7fr) minmax(180px, 0.8fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-soft);
+  padding: 1rem;
+}
+
+.catalog-filter-panel label {
+  display: grid;
+  gap: 0.42rem;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.catalog-filter-panel select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  outline: 0;
+  padding: 0.95rem 1rem;
+}
+
+.catalog-filter-panel .btn-secondary {
+  width: max-content;
+  min-width: 130px;
+}
+
+.catalog-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.4rem;
+}
+
+.catalog-category-tabs button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+  padding: 0 0.9rem;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.catalog-category-tabs button:hover,
+.catalog-category-tabs button.active {
+  border-color: rgba(111, 133, 104, 0.42);
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.catalog-category-sections {
+  display: grid;
+  gap: 3rem;
+}
+
+.catalog-category-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.catalog-category-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.8rem;
+}
+
+.catalog-category-heading h2 {
+  margin-top: 0.35rem;
+  font-size: 2.45rem;
+}
+
+.catalog-category-heading > span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
 .luxury-editorial,
 .ritual-section,
 .final-cta {
@@ -2497,6 +2589,7 @@ input:focus {
   .admin-order-row,
   .admin-order-details,
   .admin-filter-panel,
+  .catalog-filter-panel,
   .inventory-row {
     grid-template-columns: 1fr 1fr;
   }
@@ -2731,8 +2824,22 @@ input:focus {
   .admin-order-details,
   .admin-order-item,
   .admin-filter-panel,
+  .catalog-filter-panel,
   .inventory-row {
     grid-template-columns: 1fr;
+  }
+
+  .catalog-filter-panel .btn-secondary {
+    width: 100%;
+  }
+
+  .catalog-category-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .catalog-category-heading h2 {
+    font-size: 2rem;
   }
 
   .inventory-product strong,
