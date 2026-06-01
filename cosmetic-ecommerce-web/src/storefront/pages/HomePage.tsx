@@ -142,6 +142,9 @@ export default function HomePage() {
 
   const heroSrc = homeContent.hero.image_url || heroImage
   const editorialSrc = homeContent.editorial.image_url || heroImage
+  const categoryCarouselItems = categories.length > 1 ? [...categories, ...categories] : categories
+  const showcaseCarouselItems =
+    showcaseProducts.length > 1 ? [...showcaseProducts, ...showcaseProducts] : showcaseProducts
 
   return (
     <>
@@ -185,19 +188,21 @@ export default function HomePage() {
             <h2>Parcourez la boutique par univers beaute.</h2>
           </div>
 
-          <div className="home-category-carousel" aria-label="Categories boutique">
-            {categories.map((category) => (
-              <Link
-                to={`/catalog?category=${category.id}`}
-                className="home-category-slide"
-                key={category.id}
-              >
-                <img src={category.display_image_url || heroImage} alt={category.name} />
-                <span>Explorer</span>
-                <h3>{category.name}</h3>
-                {category.description && <p>{category.description}</p>}
-              </Link>
-            ))}
+          <div className="home-carousel-window">
+            <div className="home-category-carousel auto-scroll" aria-label="Categories boutique">
+              {categoryCarouselItems.map((category, index) => (
+                <Link
+                  to={`/catalog?category=${category.id}`}
+                  className="home-category-slide"
+                  key={`${category.id}-${index}`}
+                >
+                  <img src={category.display_image_url || heroImage} alt={category.name} />
+                  <span>Explorer</span>
+                  <h3>{category.name}</h3>
+                  {category.description && <p>{category.description}</p>}
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -213,12 +218,14 @@ export default function HomePage() {
             <Link to="/catalog" className="btn-ghost">Tout voir</Link>
           </div>
 
-          <div className="home-product-rail" aria-label="Produits boutique">
-            {showcaseProducts.map((product) => (
-              <div className="home-product-slide" key={product.id}>
-                <ProductCard product={product} />
-              </div>
-            ))}
+          <div className="home-carousel-window">
+            <div className="home-product-rail auto-scroll" aria-label="Produits boutique">
+              {showcaseCarouselItems.map((product, index) => (
+                <div className="home-product-slide" key={`${product.id}-${index}`}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

@@ -634,10 +634,13 @@ input:focus {
   padding-bottom: 0;
 }
 
+.home-carousel-window {
+  overflow: hidden;
+  width: 100%;
+}
+
 .home-category-carousel {
-  display: grid;
-  grid-auto-columns: minmax(250px, 31%);
-  grid-auto-flow: column;
+  display: flex;
   gap: 1rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -646,9 +649,27 @@ input:focus {
   scrollbar-width: thin;
 }
 
+.home-category-carousel.auto-scroll,
+.home-product-rail.auto-scroll {
+  overflow: visible;
+}
+
+.home-category-carousel.auto-scroll {
+  width: max-content;
+  min-width: 100%;
+  animation: home-carousel-scroll 34s linear infinite;
+}
+
+.home-category-carousel.auto-scroll:hover,
+.home-product-rail.auto-scroll:hover {
+  animation-play-state: paused;
+}
+
 .home-category-slide {
   position: relative;
   display: grid;
+  width: min(360px, 31vw);
+  min-width: 250px;
   min-height: 310px;
   align-content: end;
   gap: 0.55rem;
@@ -737,9 +758,7 @@ input:focus {
 }
 
 .home-product-rail {
-  display: grid;
-  grid-auto-columns: minmax(260px, 24%);
-  grid-auto-flow: column;
+  display: flex;
   gap: 1rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -749,8 +768,33 @@ input:focus {
 }
 
 .home-product-slide {
-  min-width: 0;
+  width: min(310px, 24vw);
+  min-width: 260px;
   scroll-snap-align: start;
+}
+
+.home-product-rail.auto-scroll {
+  width: max-content;
+  min-width: 100%;
+  animation: home-carousel-scroll 42s linear infinite;
+}
+
+@keyframes home-carousel-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-category-carousel.auto-scroll,
+  .home-product-rail.auto-scroll {
+    animation: none;
+    overflow-x: auto;
+  }
 }
 
 .home-product-slide .product-card {
@@ -2680,8 +2724,12 @@ input:focus {
     justify-self: start;
   }
 
-  .home-product-rail {
-    grid-auto-columns: minmax(240px, 42%);
+  .home-category-slide {
+    width: min(330px, 42vw);
+  }
+
+  .home-product-slide {
+    width: min(285px, 42vw);
   }
 
   .home-showcase-heading {
@@ -2854,9 +2902,9 @@ input:focus {
     grid-template-columns: 1fr;
   }
 
-  .home-category-carousel,
-  .home-product-rail {
-    grid-auto-columns: minmax(235px, 82%);
+  .home-category-slide,
+  .home-product-slide {
+    width: min(280px, 82vw);
   }
 
   .section-block,
