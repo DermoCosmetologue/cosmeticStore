@@ -22,6 +22,7 @@ type HomeCategory = {
   slug: string
   description: string | null
   image_url: string | null
+  display_image_url: string | null
 }
 
 export default function HomePage() {
@@ -83,7 +84,26 @@ export default function HomePage() {
         .order('name', { ascending: true })
 
       if (!error && data) {
-        setCategories(data as HomeCategory[])
+        const { data: productsData } = await supabase
+          .from('storefront_products')
+          .select('category_id, thumbnail')
+          .eq('is_active', true)
+          .not('thumbnail', 'is', null)
+
+        const categoryImageMap = new Map<string, string>()
+
+        productsData?.forEach((product) => {
+          if (product.category_id && product.thumbnail && !categoryImageMap.has(product.category_id)) {
+            categoryImageMap.set(product.category_id, product.thumbnail)
+          }
+        })
+
+        setCategories(
+          data.map((category) => ({
+            ...category,
+            display_image_url: category.image_url || categoryImageMap.get(category.id) || null,
+          })) as HomeCategory[],
+        )
       }
     }
 
@@ -172,7 +192,7 @@ export default function HomePage() {
                 className="home-category-slide"
                 key={category.id}
               >
-                <img src={category.image_url || heroImage} alt={category.name} />
+                <img src={category.display_image_url || heroImage} alt={category.name} />
                 <span>Explorer</span>
                 <h3>{category.name}</h3>
                 {category.description && <p>{category.description}</p>}
