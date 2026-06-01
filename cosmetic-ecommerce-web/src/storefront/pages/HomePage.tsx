@@ -15,8 +15,17 @@ type FeaturedProduct = {
   thumbnail: string | null
 }
 
+type HomeCategory = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  image_url: string | null
+}
+
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([])
+  const [categories, setCategories] = useState<HomeCategory[]>([])
   const [homeContent, setHomeContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT)
 
   useEffect(() => {
@@ -45,6 +54,22 @@ export default function HomePage() {
     }
 
     void fetchFeaturedProducts()
+  }, [])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, slug, description, image_url')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+
+      if (!error && data) {
+        setCategories(data as HomeCategory[])
+      }
+    }
+
+    void fetchCategories()
   }, [])
 
   useEffect(() => {
@@ -112,6 +137,30 @@ export default function HomePage() {
               <span>{feature.label}</span>
             </div>
           ))}
+        </section>
+      )}
+
+      {categories.length > 0 && (
+        <section className="container section-block home-category-carousel-section">
+          <div className="section-heading">
+            <span className="eyebrow">Categories</span>
+            <h2>Parcourez la boutique par univers beaute.</h2>
+          </div>
+
+          <div className="home-category-carousel" aria-label="Categories boutique">
+            {categories.map((category) => (
+              <Link
+                to={`/catalog?category=${category.id}`}
+                className="home-category-slide"
+                key={category.id}
+              >
+                <img src={category.image_url || heroImage} alt={category.name} />
+                <span>Explorer</span>
+                <h3>{category.name}</h3>
+                {category.description && <p>{category.description}</p>}
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

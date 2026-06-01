@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import ProductGrid from '../components/products/ProductGrid'
 
@@ -16,6 +17,7 @@ type Product = {
 type SortOption = 'featured' | 'price-asc' | 'price-desc' | 'name'
 
 export default function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -38,6 +40,22 @@ export default function CatalogPage() {
 
     void fetchProducts()
   }, [])
+
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl)
+    }
+  }, [searchParams])
+
+  const selectCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId)
+    if (categoryId === 'all') {
+      setSearchParams({})
+    } else {
+      setSearchParams({ category: categoryId })
+    }
+  }
 
   const categories = useMemo(() => {
     const categoryMap = new Map<string, string>()
@@ -88,7 +106,7 @@ export default function CatalogPage() {
   }, [categories, filteredProducts])
 
   const resetFilters = () => {
-    setSelectedCategory('all')
+    selectCategory('all')
     setSearchTerm('')
     setMaxPrice('')
     setSortOption('featured')
@@ -120,7 +138,7 @@ export default function CatalogPage() {
 
         <label>
           Categorie
-          <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+          <select value={selectedCategory} onChange={(event) => selectCategory(event.target.value)}>
             <option value="all">Toutes les categories</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -160,7 +178,7 @@ export default function CatalogPage() {
         <button
           type="button"
           className={selectedCategory === 'all' ? 'active' : ''}
-          onClick={() => setSelectedCategory('all')}
+          onClick={() => selectCategory('all')}
         >
           Toutes
         </button>
@@ -169,7 +187,7 @@ export default function CatalogPage() {
             type="button"
             key={category.id}
             className={selectedCategory === category.id ? 'active' : ''}
-            onClick={() => setSelectedCategory(category.id)}
+            onClick={() => selectCategory(category.id)}
           >
             {category.name}
           </button>
