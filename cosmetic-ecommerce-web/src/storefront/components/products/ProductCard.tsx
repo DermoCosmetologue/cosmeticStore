@@ -16,6 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const { isInWishlist, toggleWishlist } = useWishlist()
   const formattedPrice = `${product.price.toLocaleString('fr-FR')} FCFA`
   const isFavorite = isInWishlist(product.id)
+  const description = product.short_description?.trim()
 
   return (
     <div className="product-card">
@@ -26,8 +27,11 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="product-card-body">
           <h3>{product.name}</h3>
-          {product.short_description && <p>{product.short_description}</p>}
-          <strong>{formattedPrice}</strong>
+          {description && <p className="product-card-description">{description}</p>}
+          <div className="product-card-meta">
+            <span>Disponible boutique</span>
+            <strong>{formattedPrice}</strong>
+          </div>
         </div>
       </Link>
 

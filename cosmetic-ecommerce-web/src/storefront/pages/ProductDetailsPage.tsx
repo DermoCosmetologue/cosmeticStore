@@ -57,6 +57,11 @@ export default function ProductDetailsPage() {
   }
 
   const isFavorite = isInWishlist(product.id)
+  const detailDescription = product.description?.trim() || product.short_description?.trim() || ''
+  const descriptionParagraphs = detailDescription
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
 
   return (
     <section className="container product-details">
@@ -66,8 +71,21 @@ export default function ProductDetailsPage() {
       <div className="product-detail-copy">
         <span className="eyebrow">Produit premium</span>
         <h1>{product.name}</h1>
-        <p>{product.description || product.short_description}</p>
-        <strong>{product.price.toLocaleString('fr-FR')} FCFA</strong>
+        {product.short_description && (
+          <p className="product-detail-lead">{product.short_description}</p>
+        )}
+        <div className="product-detail-price-row">
+          <span>Prix boutique</span>
+          <strong>{product.price.toLocaleString('fr-FR')} FCFA</strong>
+        </div>
+        {descriptionParagraphs.length > 0 && (
+          <div className="product-description-panel">
+            <span className="eyebrow">Description</span>
+            {descriptionParagraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        )}
         <div className="product-detail-actions">
           <button
             className="btn-primary"

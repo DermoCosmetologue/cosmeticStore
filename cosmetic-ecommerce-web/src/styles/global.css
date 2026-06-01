@@ -1221,21 +1221,38 @@ input:focus {
 
 .product-card-body {
   display: grid;
-  gap: 0.45rem;
-  min-height: 116px;
+  gap: 0.55rem;
+  min-height: 142px;
 }
 
-.product-card-body p {
+.product-card-description {
   display: -webkit-box;
   overflow: hidden;
-  min-height: 3.2em;
+  min-height: 3.15em;
+  color: #5f5a52;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   font-size: 0.9rem;
+  line-height: 1.58;
 }
 
-.product-card-body strong,
-.product-detail-copy strong {
+.product-card-meta {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: auto;
+  border-top: 1px solid rgba(231, 225, 216, 0.82);
+  padding-top: 0.75rem;
+}
+
+.product-card-meta span {
+  color: var(--sage);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.product-card-meta strong,
+.product-detail-price-row strong {
   color: var(--gold);
   font-size: 1.05rem;
 }
@@ -1315,6 +1332,51 @@ input:focus {
 
 .product-detail-copy .btn-primary {
   width: max-content;
+}
+
+.product-detail-lead {
+  max-width: 660px;
+  color: #4f4a43;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.product-detail-price-row {
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(184, 138, 68, 0.24);
+  border-radius: var(--radius);
+  background: rgba(184, 138, 68, 0.08);
+  padding: 0.85rem 1rem;
+}
+
+.product-detail-price-row span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.product-description-panel {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 720px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(111, 133, 104, 0.08), rgba(201, 111, 125, 0.06)),
+    rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-soft);
+  padding: 1.1rem;
+}
+
+.product-description-panel p {
+  color: #4f4a43;
+  font-size: 0.98rem;
+  line-height: 1.78;
 }
 
 .product-detail-actions {
@@ -2968,6 +3030,22 @@ input:focus {
 
   .product-card-body {
     min-height: auto;
+  }
+
+  .product-card-description {
+    min-height: 0;
+  }
+
+  .product-detail-lead,
+  .product-description-panel p {
+    font-size: 0.94rem;
+  }
+
+  .product-detail-price-row {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .product-card-actions {
