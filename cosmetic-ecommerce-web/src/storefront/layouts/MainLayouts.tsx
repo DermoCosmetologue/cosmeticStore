@@ -94,9 +94,9 @@ export default function MainLayout() {
     <div className="site-shell">
       <header className="header" aria-label="Navigation principale">
         <div className="container header-inner">
-          <Link to="/" className="logo" aria-label="CosmeticStore accueil" onClick={closeMenu}>
-            <span className="logo-mark">CS</span>
-            <span>CosmeticStore</span>
+          <Link to="/" className="logo" aria-label="SyShine Cosmetic accueil" onClick={closeMenu}>
+            <span className="logo-mark">SC</span>
+            <span>SyShine Cosmetic</span>
           </Link>
 
           <button
@@ -179,10 +179,10 @@ export default function MainLayout() {
         <div className="container footer-inner">
           <div>
             <Link to="/" className="logo footer-logo">
-              <span className="logo-mark">CS</span>
-              <span>CosmeticStore</span>
+              <span className="logo-mark">SC</span>
+              <span>SyShine Cosmetic</span>
             </Link>
-            <p>Beaute premium, selectionnee avec soin.</p>
+            <p>Beaute premium, selectionnee avec soin par SyShine Cosmetic.</p>
           </div>
 
           <div className="footer-links">
