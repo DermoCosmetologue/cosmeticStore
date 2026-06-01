@@ -95,7 +95,9 @@ export default function MainLayout() {
       <header className="header" aria-label="Navigation principale">
         <div className="container header-inner">
           <Link to="/" className="logo" aria-label="SyShine Cosmetic accueil" onClick={closeMenu}>
-            <span className="logo-mark">SC</span>
+            <span className="logo-mark">
+              <img src="/syshine-logo.webp" alt="" />
+            </span>
             <span>SyShine Cosmetic</span>
           </Link>
 
@@ -179,7 +181,9 @@ export default function MainLayout() {
         <div className="container footer-inner">
           <div>
             <Link to="/" className="logo footer-logo">
-              <span className="logo-mark">SC</span>
+              <span className="logo-mark">
+                <img src="/syshine-logo.webp" alt="" />
+              </span>
               <span>SyShine Cosmetic</span>
             </Link>
             <p>Beaute premium, selectionnee avec soin par SyShine Cosmetic.</p>
