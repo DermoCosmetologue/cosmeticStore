@@ -45,10 +45,19 @@ export async function fetchHomeContent() {
 }
 
 export async function saveHomeContent(settings: HomeContent) {
-  const { error } = await supabase.from('homepage_settings').upsert({
-    id: HOMEPAGE_SETTINGS_ID,
-    settings,
-  })
+  const { data, error } = await supabase
+    .from('homepage_settings')
+    .upsert(
+      {
+        id: HOMEPAGE_SETTINGS_ID,
+        settings,
+      },
+      { onConflict: 'id' },
+    )
+    .select('settings')
+    .single()
 
   if (error) throw new Error(error.message)
+
+  return mergeHomeContent(data.settings as Partial<HomeContent> | null)
 }

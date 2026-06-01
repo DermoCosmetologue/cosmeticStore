@@ -162,7 +162,8 @@ export default function HomepageAdminPage() {
     setErrorMessage('')
 
     try {
-      await saveHomeContent(form)
+      const savedSettings = await saveHomeContent(form)
+      setForm(savedSettings)
       setMessage("Page d'accueil enregistree.")
     } catch (error) {
       console.error(error)

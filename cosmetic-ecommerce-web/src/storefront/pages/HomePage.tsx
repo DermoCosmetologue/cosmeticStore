@@ -26,7 +26,6 @@ export default function HomePage() {
         .select('id, name, slug, short_description, price, thumbnail')
         .eq('is_active', true)
         .eq('is_featured', true)
-        .not('thumbnail', 'is', null)
         .limit(3)
 
       if (featuredData && featuredData.length > 0) {
@@ -38,7 +37,6 @@ export default function HomePage() {
         .from('storefront_products')
         .select('id, name, slug, short_description, price, thumbnail')
         .eq('is_active', true)
-        .not('thumbnail', 'is', null)
         .limit(3)
 
       if (activeData) {
@@ -50,12 +48,33 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
+    let mounted = true
+
     const loadHomeContent = async () => {
       const settings = await fetchHomeContent()
-      setHomeContent(settings)
+      if (mounted) setHomeContent(settings)
     }
 
     void loadHomeContent()
+
+    const handleFocus = () => {
+      void loadHomeContent()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void loadHomeContent()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const heroSrc = homeContent.hero.image_url || heroImage
