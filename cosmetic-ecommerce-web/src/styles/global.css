@@ -814,16 +814,27 @@ input:focus {
   padding: 1rem;
 }
 
+.catalog-filter-panel input,
+.catalog-filter-panel select {
+  min-width: 0;
+}
+
 .catalog-filter-panel label {
   display: grid;
   gap: 0.42rem;
+  min-width: 0;
   color: var(--ink);
   font-size: 0.88rem;
   font-weight: 850;
 }
 
+.catalog-filter-panel input {
+  min-height: 46px;
+}
+
 .catalog-filter-panel select {
   width: 100%;
+  min-height: 46px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
@@ -845,6 +856,7 @@ input:focus {
 }
 
 .catalog-category-tabs button {
+  max-width: 100%;
   min-height: 40px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -852,7 +864,10 @@ input:focus {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 850;
+  overflow: hidden;
   padding: 0 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
@@ -885,6 +900,7 @@ input:focus {
 .catalog-category-heading h2 {
   margin-top: 0.35rem;
   font-size: 2.45rem;
+  overflow-wrap: anywhere;
 }
 
 .catalog-category-heading > span {
@@ -2778,6 +2794,14 @@ input:focus {
     grid-template-columns: 1fr 1fr;
   }
 
+  .catalog-filter-panel {
+    align-items: stretch;
+  }
+
+  .catalog-filter-panel .btn-secondary {
+    width: 100%;
+  }
+
   .admin-image-field {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2900,6 +2924,61 @@ input:focus {
   .grid,
   .luxury-picks-grid {
     grid-template-columns: 1fr;
+  }
+
+  .catalog-filter-panel {
+    gap: 0.65rem;
+    margin-bottom: 0.8rem;
+    padding: 0.8rem;
+  }
+
+  .catalog-filter-panel label {
+    font-size: 0.84rem;
+  }
+
+  .catalog-filter-panel input,
+  .catalog-filter-panel select {
+    min-height: 44px;
+    padding: 0.78rem 0.85rem;
+  }
+
+  .catalog-category-tabs {
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+  }
+
+  .catalog-category-tabs button {
+    flex: 0 0 auto;
+    max-width: min(240px, 78vw);
+    scroll-snap-align: start;
+  }
+
+  .catalog-category-sections {
+    gap: 2.3rem;
+  }
+
+  .product-card {
+    gap: 0.85rem;
+    padding: 0.65rem;
+  }
+
+  .product-card-body {
+    min-height: auto;
+  }
+
+  .product-card-actions {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .product-card-actions .btn-secondary {
+    width: 100%;
+    min-width: 0;
+    padding: 0 0.85rem;
   }
 
   .home-category-slide,
@@ -3025,6 +3104,7 @@ input:focus {
   .catalog-category-heading {
     align-items: flex-start;
     flex-direction: column;
+    gap: 0.45rem;
   }
 
   .catalog-category-heading h2 {
