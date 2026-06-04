@@ -5,6 +5,7 @@ import {
   fetchProducts,
   replaceProductImages,
   updateProduct,
+  uploadProductDescriptionImageFiles,
   uploadProductImageFiles,
 } from './ProductService'
 import type { ProductInput } from './ProductService'
@@ -59,12 +60,27 @@ function toSlug(value: string) {
     .replace(/(^-|-$)+/g, '')
 }
 
+function appendDescriptionImages(description: string, imageUrls: string[], productName: string) {
+  const cleanUrls = imageUrls.map((url) => url.trim()).filter(Boolean)
+
+  if (cleanUrls.length === 0) return description
+
+  const markdownImages = cleanUrls.map(
+    (url, index) => `![${productName || 'Image description'} ${index + 1}](${url})`,
+  )
+  const currentDescription = description.trimEnd()
+
+  return [currentDescription, ...markdownImages].filter(Boolean).join('\n\n')
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState<ProductInput>(emptyForm)
   const [imageUrls, setImageUrls] = useState<string[]>([''])
   const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [descriptionImageUrls, setDescriptionImageUrls] = useState<string[]>([''])
+  const [descriptionImageFiles, setDescriptionImageFiles] = useState<File[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -139,11 +155,10 @@ export default function ProductsPage() {
 
     try {
       const urlImages = imageUrls.map((url) => url.trim()).filter(Boolean)
+      const descriptionUrlImages = descriptionImageUrls.map((url) => url.trim()).filter(Boolean)
       let productId = editingId
 
-      if (editingId) {
-        await updateProduct(editingId, form)
-      } else {
+      if (!productId) {
         const createdProduct = await createProduct(form)
         productId = createdProduct.id
       }
@@ -151,6 +166,22 @@ export default function ProductsPage() {
       const uploadedUrls = productId && imageFiles.length > 0
         ? await uploadProductImageFiles(productId, imageFiles)
         : []
+      const uploadedDescriptionUrls = productId && descriptionImageFiles.length > 0
+        ? await uploadProductDescriptionImageFiles(productId, descriptionImageFiles)
+        : []
+      const finalPayload = {
+        ...form,
+        description: appendDescriptionImages(
+          form.description,
+          [...descriptionUrlImages, ...uploadedDescriptionUrls],
+          form.name,
+        ),
+      }
+
+      if (productId) {
+        await updateProduct(productId, finalPayload)
+      }
+
       const productImages = [...urlImages, ...uploadedUrls].map((image_url, index) => ({
         image_url,
         alt_text: `${form.name} image ${index + 1}`,
@@ -164,6 +195,8 @@ export default function ProductsPage() {
       setForm(emptyForm)
       setImageUrls([''])
       setImageFiles([])
+      setDescriptionImageUrls([''])
+      setDescriptionImageFiles([])
       setEditingId(null)
       await loadProducts()
     } catch (error) {
@@ -198,12 +231,16 @@ export default function ProductsPage() {
     })
     setImageUrls(sortedImages.length > 0 ? sortedImages.map((image) => image.image_url) : [''])
     setImageFiles([])
+    setDescriptionImageUrls([''])
+    setDescriptionImageFiles([])
   }
 
   const resetForm = () => {
     setForm(emptyForm)
     setImageUrls([''])
     setImageFiles([])
+    setDescriptionImageUrls([''])
+    setDescriptionImageFiles([])
     setEditingId(null)
     setErrorMessage('')
   }
@@ -224,6 +261,26 @@ export default function ProductsPage() {
 
   const handleImageFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setImageFiles(Array.from(event.target.files ?? []))
+  }
+
+  const updateDescriptionImageUrl = (index: number, value: string) => {
+    setDescriptionImageUrls((prev) =>
+      prev.map((url, currentIndex) => (currentIndex === index ? value : url)),
+    )
+  }
+
+  const addDescriptionImageUrl = () => {
+    setDescriptionImageUrls((prev) => [...prev, ''])
+  }
+
+  const removeDescriptionImageUrl = (index: number) => {
+    setDescriptionImageUrls((prev) =>
+      prev.length === 1 ? [''] : prev.filter((_, currentIndex) => currentIndex !== index),
+    )
+  }
+
+  const handleDescriptionImageFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDescriptionImageFiles(Array.from(event.target.files ?? []))
   }
 
   const handleDelete = async (id: string) => {
@@ -314,10 +371,56 @@ export default function ProductsPage() {
               name="description"
               value={form.description}
               onChange={handleChange}
-              placeholder="Détails, bénéfices, conseils d'utilisation"
-              rows={4}
+              placeholder="Détails, bénéfices, conseils d'utilisation. Image manuelle : ![Texte](https://...)"
+              rows={6}
             />
           </label>
+
+          <div className="admin-image-fields">
+            <div className="admin-form-heading compact">
+              <h2>Images dans la description</h2>
+              <p>Ces images seront ajoutees a la fin de la description du produit.</p>
+            </div>
+
+            {descriptionImageUrls.map((url, index) => (
+              <div className="admin-image-field" key={index}>
+                <label>
+                  Image description {index + 1}
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(event) => updateDescriptionImageUrl(index, event.target.value)}
+                    placeholder="https://exemple.com/detail-produit.jpg"
+                  />
+                </label>
+
+                {url.trim() && <img src={url.trim()} alt={`Apercu description ${index + 1}`} />}
+
+                <button
+                  type="button"
+                  className="admin-secondary-button"
+                  onClick={() => removeDescriptionImageUrl(index)}
+                >
+                  Retirer
+                </button>
+              </div>
+            ))}
+
+            <button type="button" className="admin-secondary-button" onClick={addDescriptionImageUrl}>
+              Ajouter une image de description
+            </button>
+
+            <label>
+              Importer des images de description
+              <input type="file" accept="image/*" multiple onChange={handleDescriptionImageFilesChange} />
+            </label>
+
+            {descriptionImageFiles.length > 0 && (
+              <p className="admin-help-text">
+                {descriptionImageFiles.length} image(s) de description prete(s) a envoyer.
+              </p>
+            )}
+          </div>
 
           <div className="admin-form-grid">
             <label>

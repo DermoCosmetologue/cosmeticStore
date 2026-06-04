@@ -14,6 +14,30 @@ type Product = {
   thumbnail: string | null
 }
 
+type DescriptionBlock =
+  | { type: 'paragraph'; content: string }
+  | { type: 'image'; alt: string; src: string }
+
+function parseDescriptionBlocks(description: string): DescriptionBlock[] {
+  return description
+    .split(/\n+/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      const imageMatch = block.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+
+      if (imageMatch) {
+        return {
+          type: 'image',
+          alt: imageMatch[1] || 'Image description produit',
+          src: imageMatch[2],
+        }
+      }
+
+      return { type: 'paragraph', content: block }
+    })
+}
+
 export default function ProductDetailsPage() {
   const { slug } = useParams()
   const { addToCart } = useCart()
@@ -58,10 +82,7 @@ export default function ProductDetailsPage() {
 
   const isFavorite = isInWishlist(product.id)
   const detailDescription = product.description?.trim() || product.short_description?.trim() || ''
-  const descriptionParagraphs = detailDescription
-    .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
+  const descriptionBlocks = parseDescriptionBlocks(detailDescription)
 
   return (
     <section className="container product-details">
@@ -78,11 +99,21 @@ export default function ProductDetailsPage() {
           <span>Prix boutique</span>
           <strong>{product.price.toLocaleString('fr-FR')} FCFA</strong>
         </div>
-        {descriptionParagraphs.length > 0 && (
+        {descriptionBlocks.length > 0 && (
           <div className="product-description-panel">
             <span className="eyebrow">Description</span>
-            {descriptionParagraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+            {descriptionBlocks.map((block, index) => (
+              block.type === 'image' ? (
+                <img
+                  className="product-description-image"
+                  key={`${block.src}-${index}`}
+                  src={block.src}
+                  alt={block.alt}
+                  loading="lazy"
+                />
+              ) : (
+                <p key={index}>{block.content}</p>
+              )
             ))}
           </div>
         )}

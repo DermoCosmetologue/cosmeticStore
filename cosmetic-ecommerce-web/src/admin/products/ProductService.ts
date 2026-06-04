@@ -25,6 +25,30 @@ export type ProductImageInput = {
 
 const PRODUCT_IMAGES_BUCKET = 'product-images'
 
+async function uploadProductFiles(productId: string, files: File[], directory = '') {
+  const uploadedUrls: string[] = []
+
+  for (const file of files) {
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const safeName = `${crypto.randomUUID()}.${extension}`
+    const path = [productId, directory, safeName].filter(Boolean).join('/')
+
+    const { error } = await supabase.storage
+      .from(PRODUCT_IMAGES_BUCKET)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      })
+
+    if (error) throw error
+
+    const { data } = supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path)
+    uploadedUrls.push(data.publicUrl)
+  }
+
+  return uploadedUrls
+}
+
 export async function fetchProducts() {
   const { data, error } = await supabase
     .from('products')
@@ -83,25 +107,9 @@ export async function replaceProductImages(productId: string, images: ProductIma
 }
 
 export async function uploadProductImageFiles(productId: string, files: File[]) {
-  const uploadedUrls: string[] = []
+  return uploadProductFiles(productId, files)
+}
 
-  for (const file of files) {
-    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const safeName = `${crypto.randomUUID()}.${extension}`
-    const path = `${productId}/${safeName}`
-
-    const { error } = await supabase.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-
-    if (error) throw error
-
-    const { data } = supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path)
-    uploadedUrls.push(data.publicUrl)
-  }
-
-  return uploadedUrls
+export async function uploadProductDescriptionImageFiles(productId: string, files: File[]) {
+  return uploadProductFiles(productId, files, 'description')
 }

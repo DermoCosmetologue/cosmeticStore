@@ -7,6 +7,7 @@ type Product = {
   short_description: string | null
   price: number
   thumbnail: string | null
+  image_urls?: (string | null)[] | null
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {

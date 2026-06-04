@@ -14,6 +14,7 @@ type FeaturedProduct = {
   short_description: string | null
   price: number
   thumbnail: string | null
+  image_urls: string[]
 }
 
 type HomeCategory = {
@@ -25,6 +26,41 @@ type HomeCategory = {
   display_image_url: string | null
 }
 
+type ProductImage = {
+  image_url: string | null
+  sort_order: number | null
+}
+
+type ProductRow = {
+  id: string
+  name: string
+  slug: string
+  short_description: string | null
+  price: number
+  product_images?: ProductImage[] | null
+}
+
+function getProductImageUrls(images?: ProductImage[] | null) {
+  return [...(images ?? [])]
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .map((image) => image.image_url)
+    .filter(Boolean) as string[]
+}
+
+function mapFeaturedProduct(row: ProductRow): FeaturedProduct {
+  const imageUrls = getProductImageUrls(row.product_images)
+
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    short_description: row.short_description,
+    price: Number(row.price || 0),
+    thumbnail: imageUrls[0] || null,
+    image_urls: imageUrls,
+  }
+}
+
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([])
   const [showcaseProducts, setShowcaseProducts] = useState<FeaturedProduct[]>([])
@@ -34,25 +70,25 @@ export default function HomePage() {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       const { data: featuredData } = await supabase
-        .from('storefront_products')
-        .select('id, name, slug, short_description, price, thumbnail')
+        .from('products')
+        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .eq('is_featured', true)
         .limit(3)
 
       if (featuredData && featuredData.length > 0) {
-        setFeaturedProducts(featuredData as FeaturedProduct[])
+        setFeaturedProducts((featuredData as unknown as ProductRow[]).map(mapFeaturedProduct))
         return
       }
 
       const { data: activeData } = await supabase
-        .from('storefront_products')
-        .select('id, name, slug, short_description, price, thumbnail')
+        .from('products')
+        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .limit(3)
 
       if (activeData) {
-        setFeaturedProducts(activeData as FeaturedProduct[])
+        setFeaturedProducts((activeData as unknown as ProductRow[]).map(mapFeaturedProduct))
       }
     }
 
@@ -62,13 +98,13 @@ export default function HomePage() {
   useEffect(() => {
     const fetchShowcaseProducts = async () => {
       const { data, error } = await supabase
-        .from('storefront_products')
-        .select('id, name, slug, short_description, price, thumbnail')
+        .from('products')
+        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .limit(10)
 
       if (!error && data) {
-        setShowcaseProducts(data as FeaturedProduct[])
+        setShowcaseProducts((data as unknown as ProductRow[]).map(mapFeaturedProduct))
       }
     }
 

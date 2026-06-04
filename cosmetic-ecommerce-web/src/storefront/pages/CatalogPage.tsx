@@ -12,6 +12,51 @@ type Product = {
   short_description: string | null
   price: number
   thumbnail: string | null
+  image_urls: string[]
+}
+
+type ProductImage = {
+  image_url: string | null
+  sort_order: number | null
+}
+
+type ProductRow = {
+  id: string
+  category_id: string
+  categories: { name: string } | { name: string }[] | null
+  name: string
+  slug: string
+  short_description: string | null
+  price: number
+  product_images?: ProductImage[] | null
+}
+
+function getCategoryName(categories: ProductRow['categories']) {
+  const category = Array.isArray(categories) ? categories[0] : categories
+  return category?.name || 'Sans categorie'
+}
+
+function getProductImageUrls(images?: ProductImage[] | null) {
+  return [...(images ?? [])]
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .map((image) => image.image_url)
+    .filter(Boolean) as string[]
+}
+
+function mapProductRow(row: ProductRow): Product {
+  const imageUrls = getProductImageUrls(row.product_images)
+
+  return {
+    id: row.id,
+    category_id: row.category_id,
+    category_name: getCategoryName(row.categories),
+    name: row.name,
+    slug: row.slug,
+    short_description: row.short_description,
+    price: Number(row.price || 0),
+    thumbnail: imageUrls[0] || null,
+    image_urls: imageUrls,
+  }
 }
 
 type SortOption = 'featured' | 'price-asc' | 'price-desc' | 'name'
@@ -28,12 +73,12 @@ export default function CatalogPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       const { data, error } = await supabase
-        .from('storefront_products')
-        .select('*')
+        .from('products')
+        .select('id, category_id, name, slug, short_description, price, categories(name), product_images(image_url, sort_order)')
         .eq('is_active', true)
 
       if (!error && data) {
-        setProducts(data as Product[])
+        setProducts((data as unknown as ProductRow[]).map(mapProductRow))
       }
       setLoading(false)
     }

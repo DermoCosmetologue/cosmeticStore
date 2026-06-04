@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/useCart'
 import { useWishlist } from '../../context/useWishlist'
@@ -9,6 +10,7 @@ type Product = {
   short_description: string | null
   price: number
   thumbnail: string | null
+  image_urls?: (string | null)[] | null
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -17,12 +19,47 @@ export default function ProductCard({ product }: { product: Product }) {
   const formattedPrice = `${product.price.toLocaleString('fr-FR')} FCFA`
   const isFavorite = isInWishlist(product.id)
   const description = product.short_description?.trim()
+  const [isPreviewingImages, setIsPreviewingImages] = useState(false)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const displayImages = useMemo(() => {
+    const productImages = Array.from(
+      new Set([product.thumbnail, ...(product.image_urls ?? [])].filter(Boolean) as string[]),
+    )
+
+    return productImages.length > 0 ? productImages : ['/placeholder.png']
+  }, [product.image_urls, product.thumbnail])
+
+  useEffect(() => {
+    if (!isPreviewingImages || displayImages.length <= 1) {
+      setActiveImageIndex(0)
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveImageIndex((currentIndex) => (currentIndex + 1) % displayImages.length)
+    }, 900)
+
+    return () => window.clearInterval(intervalId)
+  }, [displayImages.length, isPreviewingImages])
 
   return (
     <div className="product-card">
       <Link to={`/product/${product.slug}`} className="product-card-link">
-        <div className="product-image-wrap">
-          <img src={product.thumbnail || '/placeholder.png'} alt={product.name} />
+        <div
+          className={`product-image-wrap ${displayImages.length > 1 ? 'has-gallery' : ''}`}
+          onMouseEnter={() => setIsPreviewingImages(true)}
+          onMouseLeave={() => setIsPreviewingImages(false)}
+          onFocus={() => setIsPreviewingImages(true)}
+          onBlur={() => setIsPreviewingImages(false)}
+        >
+          {displayImages.map((imageUrl, index) => (
+            <img
+              key={`${imageUrl}-${index}`}
+              className={index === activeImageIndex ? 'active' : ''}
+              src={imageUrl}
+              alt={index === 0 ? product.name : `${product.name} image ${index + 1}`}
+            />
+          ))}
           <span className="product-pill">Premium</span>
         </div>
         <div className="product-card-body">

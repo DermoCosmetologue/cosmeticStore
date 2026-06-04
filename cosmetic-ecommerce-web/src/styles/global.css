@@ -1205,13 +1205,25 @@ input:focus {
 }
 
 .product-image-wrap img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.28s ease;
+  opacity: 1;
+  transition: opacity 0.24s ease, transform 0.28s ease;
 }
 
-.product-card:hover .product-image-wrap img {
+.product-image-wrap.has-gallery img {
+  opacity: 0;
+}
+
+.product-image-wrap.has-gallery img.active {
+  opacity: 1;
+}
+
+.product-card:hover .product-image-wrap img,
+.product-card-link:focus-visible .product-image-wrap img {
   transform: scale(1.04);
 }
 
@@ -1385,6 +1397,15 @@ input:focus {
   color: #4f4a43;
   font-size: 0.98rem;
   line-height: 1.78;
+}
+
+.product-description-image {
+  width: 100%;
+  max-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  object-fit: cover;
 }
 
 .product-detail-actions {
