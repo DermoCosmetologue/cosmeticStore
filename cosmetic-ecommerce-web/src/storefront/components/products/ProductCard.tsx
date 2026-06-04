@@ -29,6 +29,7 @@ export default function ProductCard({ product }: { product: Product }) {
     return productImages.length > 0 ? productImages : ['/placeholder.png']
   }, [product.image_urls, product.thumbnail])
   const hasGallery = displayImages.length > 1
+  const activeImage = displayImages[activeImageIndex] || displayImages[0]
 
   const showPreviousImage = () => {
     setActiveImageIndex((currentIndex) =>
@@ -44,14 +45,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="product-card">
       <div className={`product-image-wrap ${hasGallery ? 'has-gallery' : ''}`}>
         <Link to={`/product/${product.slug}`} className="product-image-link" aria-label={`Voir ${product.name}`}>
-          {displayImages.map((imageUrl, index) => (
-            <img
-              key={`${imageUrl}-${index}`}
-              className={index === activeImageIndex ? 'active' : ''}
-              src={imageUrl}
-              alt={index === 0 ? product.name : `${product.name} image ${index + 1}`}
-            />
-          ))}
+          <img src={activeImage} alt={activeImageIndex === 0 ? product.name : `${product.name} image ${activeImageIndex + 1}`} loading="lazy" decoding="async" />
           {product.badge_label && <span className="product-pill">{product.badge_label}</span>}
         </Link>
 

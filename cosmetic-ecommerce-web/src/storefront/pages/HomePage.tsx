@@ -73,53 +73,26 @@ export default function HomePage() {
   const [homeContent, setHomeContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT)
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      const { data: featuredData } = await supabase
-        .from('products')
-        .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .limit(3)
-
-      if (featuredData && featuredData.length > 0) {
-        const products = (featuredData as unknown as ProductRow[]).map(mapFeaturedProduct)
-        const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
-        setFeaturedProducts(applyProductBadges(products, statsMap))
-        return
-      }
-
-      const { data: activeData } = await supabase
-        .from('products')
-        .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
-        .eq('is_active', true)
-        .limit(3)
-
-      if (activeData) {
-        const products = (activeData as unknown as ProductRow[]).map(mapFeaturedProduct)
-        const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
-        setFeaturedProducts(applyProductBadges(products, statsMap))
-      }
-    }
-
-    void fetchFeaturedProducts()
-  }, [])
-
-  useEffect(() => {
-    const fetchShowcaseProducts = async () => {
+    const fetchHomeProducts = async () => {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
         .eq('is_active', true)
+        .order('is_featured', { ascending: false })
         .limit(10)
 
       if (!error && data) {
         const products = (data as unknown as ProductRow[]).map(mapFeaturedProduct)
         const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
-        setShowcaseProducts(applyProductBadges(products, statsMap))
+        const badgedProducts = applyProductBadges(products, statsMap)
+        const featured = badgedProducts.filter((product) => product.is_featured).slice(0, 3)
+
+        setShowcaseProducts(badgedProducts)
+        setFeaturedProducts(featured.length > 0 ? featured : badgedProducts.slice(0, 3))
       }
     }
 
-    void fetchShowcaseProducts()
+    void fetchHomeProducts()
   }, [])
 
   useEffect(() => {

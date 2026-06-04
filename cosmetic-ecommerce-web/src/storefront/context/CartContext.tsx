@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { readJsonStorage, removeStorageItem, writeJsonStorage } from '../../shared/utils/storage'
 import { CartContext } from './cartContextValue'
 
 export type CartItem = {
@@ -23,16 +24,17 @@ export type CartContextType = {
   totalPrice: number
 }
 
+function isCartItems(value: unknown): value is CartItem[] {
+  return Array.isArray(value)
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const notificationTimer = useRef<number | null>(null)
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('cart')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [items, setItems] = useState<CartItem[]>(() => readJsonStorage('cart', [], isCartItems))
   const [addedProductName, setAddedProductName] = useState('')
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items))
+    writeJsonStorage('cart', items)
   }, [items])
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+  const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems((prev) => {
       const existing = prev.find((p) => p.id === item.id)
       if (existing) {
@@ -63,33 +65,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
     notificationTimer.current = window.setTimeout(() => {
       setAddedProductName('')
     }, 3500)
-  }
+  }, [])
 
-  const setCartItems = (nextItems: CartItem[]) => setItems(nextItems)
+  const setCartItems = useCallback((nextItems: CartItem[]) => setItems(nextItems), [])
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id))
-  }
+  }, [])
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) return removeFromCart(id)
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     )
-  }
+  }, [removeFromCart])
 
-  const clearCart = () => {
-    localStorage.removeItem('cart')
+  const clearCart = useCallback(() => {
+    removeStorageItem('cart')
     setItems([])
-  }
+  }, [])
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-  const totalPrice = items.reduce((sum, item) => sum + item.quantity * item.price, 0)
+  const totalItems = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items])
+  const totalPrice = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity * item.price, 0),
+    [items],
+  )
+  const contextValue = useMemo(
+    () => ({
+      items,
+      addToCart,
+      setCartItems,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      totalItems,
+      totalPrice,
+    }),
+    [addToCart, clearCart, items, removeFromCart, setCartItems, totalItems, totalPrice, updateQuantity],
+  )
 
   return (
-    <CartContext.Provider
-      value={{ items, addToCart, setCartItems, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
       {addedProductName && (
         <div className="cart-toast" role="status" aria-live="polite">

@@ -1220,14 +1220,6 @@ input:focus {
   transition: opacity 0.24s ease, transform 0.28s ease;
 }
 
-.product-image-wrap.has-gallery img {
-  opacity: 0;
-}
-
-.product-image-wrap.has-gallery img.active {
-  opacity: 1;
-}
-
 .product-card:hover .product-image-wrap img,
 .product-image-link:focus-visible img {
   transform: scale(1.04);
