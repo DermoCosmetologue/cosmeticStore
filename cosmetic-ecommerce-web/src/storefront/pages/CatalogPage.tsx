@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import ProductGrid from '../components/products/ProductGrid'
+import { applyProductBadges, fetchProductEngagementStats } from '../services/productEngagement'
 
 type Product = {
   id: string
@@ -13,6 +14,8 @@ type Product = {
   price: number
   thumbnail: string | null
   image_urls: string[]
+  is_featured: boolean
+  badge_label?: string | null
 }
 
 type ProductImage = {
@@ -28,6 +31,7 @@ type ProductRow = {
   slug: string
   short_description: string | null
   price: number
+  is_featured: boolean
   product_images?: ProductImage[] | null
 }
 
@@ -56,6 +60,7 @@ function mapProductRow(row: ProductRow): Product {
     price: Number(row.price || 0),
     thumbnail: imageUrls[0] || null,
     image_urls: imageUrls,
+    is_featured: Boolean(row.is_featured),
   }
 }
 
@@ -74,11 +79,13 @@ export default function CatalogPage() {
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, category_id, name, slug, short_description, price, categories(name), product_images(image_url, sort_order)')
+        .select('id, category_id, name, slug, short_description, price, is_featured, categories(name), product_images(image_url, sort_order)')
         .eq('is_active', true)
 
       if (!error && data) {
-        setProducts((data as unknown as ProductRow[]).map(mapProductRow))
+        const mappedProducts = (data as unknown as ProductRow[]).map(mapProductRow)
+        const statsMap = await fetchProductEngagementStats(mappedProducts.map((product) => product.id))
+        setProducts(applyProductBadges(mappedProducts, statsMap))
       }
       setLoading(false)
     }

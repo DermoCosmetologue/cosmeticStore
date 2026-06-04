@@ -819,6 +819,41 @@ using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.rol
 with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- =========================================================
+-- PRODUCT ENGAGEMENT STATS
+-- =========================================================
+create or replace view public.product_engagement_stats as
+select
+  p.id as product_id,
+  coalesce((
+    select count(*)::integer
+    from public.wishlist w
+    where w.product_id = p.id
+  ), 0) as wishlist_count,
+  coalesce((
+    select sum(oi.quantity)::integer
+    from public.order_items oi
+    join public.orders o on o.id = oi.order_id
+    where oi.product_id = p.id
+      and o.status in ('paid','processing','shipped','delivered')
+  ), 0) as order_count,
+  coalesce((
+    select count(*)::integer
+    from public.reviews r
+    where r.product_id = p.id
+      and r.is_approved = true
+  ), 0) as review_count,
+  (
+    select round(avg(r.rating)::numeric, 2)
+    from public.reviews r
+    where r.product_id = p.id
+      and r.is_approved = true
+  ) as average_rating
+from public.products p
+where p.is_active = true;
+
+grant select on public.product_engagement_stats to anon, authenticated;
+
+-- =========================================================
 -- STOREFRONT VIEW
 -- =========================================================
 create or replace view public.storefront_products as

@@ -6,6 +6,7 @@ import { DEFAULT_HOME_CONTENT } from '../homepageContent'
 import type { HomeContent } from '../homepageContent'
 import { fetchHomeContent } from '../homepageService'
 import ProductCard from '../components/products/ProductCard'
+import { applyProductBadges, fetchProductEngagementStats } from '../services/productEngagement'
 
 type FeaturedProduct = {
   id: string
@@ -15,6 +16,8 @@ type FeaturedProduct = {
   price: number
   thumbnail: string | null
   image_urls: string[]
+  is_featured: boolean
+  badge_label?: string | null
 }
 
 type HomeCategory = {
@@ -37,6 +40,7 @@ type ProductRow = {
   slug: string
   short_description: string | null
   price: number
+  is_featured: boolean
   product_images?: ProductImage[] | null
 }
 
@@ -58,6 +62,7 @@ function mapFeaturedProduct(row: ProductRow): FeaturedProduct {
     price: Number(row.price || 0),
     thumbnail: imageUrls[0] || null,
     image_urls: imageUrls,
+    is_featured: Boolean(row.is_featured),
   }
 }
 
@@ -71,24 +76,28 @@ export default function HomePage() {
     const fetchFeaturedProducts = async () => {
       const { data: featuredData } = await supabase
         .from('products')
-        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
+        .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .eq('is_featured', true)
         .limit(3)
 
       if (featuredData && featuredData.length > 0) {
-        setFeaturedProducts((featuredData as unknown as ProductRow[]).map(mapFeaturedProduct))
+        const products = (featuredData as unknown as ProductRow[]).map(mapFeaturedProduct)
+        const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
+        setFeaturedProducts(applyProductBadges(products, statsMap))
         return
       }
 
       const { data: activeData } = await supabase
         .from('products')
-        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
+        .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .limit(3)
 
       if (activeData) {
-        setFeaturedProducts((activeData as unknown as ProductRow[]).map(mapFeaturedProduct))
+        const products = (activeData as unknown as ProductRow[]).map(mapFeaturedProduct)
+        const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
+        setFeaturedProducts(applyProductBadges(products, statsMap))
       }
     }
 
@@ -99,12 +108,14 @@ export default function HomePage() {
     const fetchShowcaseProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, slug, short_description, price, product_images(image_url, sort_order)')
+        .select('id, name, slug, short_description, price, is_featured, product_images(image_url, sort_order)')
         .eq('is_active', true)
         .limit(10)
 
       if (!error && data) {
-        setShowcaseProducts((data as unknown as ProductRow[]).map(mapFeaturedProduct))
+        const products = (data as unknown as ProductRow[]).map(mapFeaturedProduct)
+        const statsMap = await fetchProductEngagementStats(products.map((product) => product.id))
+        setShowcaseProducts(applyProductBadges(products, statsMap))
       }
     }
 
@@ -321,7 +332,7 @@ export default function HomePage() {
               featuredProducts.map((product) => (
                 <Link to={`/product/${product.slug}`} className="luxury-pick" key={product.id}>
                   <img src={product.thumbnail || heroImage} alt={product.name} />
-                  <span>Selection premium</span>
+                  <span>{product.badge_label || 'Selection boutique'}</span>
                   <h3>{product.name}</h3>
                   <p>{Number(product.price || 0).toLocaleString('fr-FR')} FCFA</p>
                 </Link>

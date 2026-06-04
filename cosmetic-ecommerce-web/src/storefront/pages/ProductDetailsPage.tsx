@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useCart } from '../context/useCart'
 import { useWishlist } from '../context/useWishlist'
+import { applyProductBadges, fetchProductEngagementStats } from '../services/productEngagement'
 
 type Product = {
   id: string
@@ -12,6 +13,25 @@ type Product = {
   description?: string | null
   price: number
   thumbnail: string | null
+  image_urls: string[]
+  is_featured: boolean
+  badge_label?: string | null
+}
+
+type ProductImage = {
+  image_url: string | null
+  sort_order: number | null
+}
+
+type ProductRow = {
+  id: string
+  name: string
+  slug: string
+  short_description: string | null
+  description: string | null
+  price: number
+  is_featured: boolean
+  product_images?: ProductImage[] | null
 }
 
 type DescriptionBlock =
@@ -38,11 +58,35 @@ function parseDescriptionBlocks(description: string): DescriptionBlock[] {
     })
 }
 
+function getProductImageUrls(images?: ProductImage[] | null) {
+  return [...(images ?? [])]
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .map((image) => image.image_url)
+    .filter(Boolean) as string[]
+}
+
+function mapProductRow(row: ProductRow): Product {
+  const imageUrls = getProductImageUrls(row.product_images)
+
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    short_description: row.short_description,
+    description: row.description,
+    price: Number(row.price || 0),
+    thumbnail: imageUrls[0] || null,
+    image_urls: imageUrls,
+    is_featured: Boolean(row.is_featured),
+  }
+}
+
 export default function ProductDetailsPage() {
   const { slug } = useParams()
   const { addToCart } = useCart()
   const { isInWishlist, toggleWishlist } = useWishlist()
   const [product, setProduct] = useState<Product | null>(null)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -53,13 +97,17 @@ export default function ProductDetailsPage() {
       }
 
       const { data, error } = await supabase
-        .from('storefront_products')
-        .select('*')
+        .from('products')
+        .select('id, name, slug, short_description, description, price, is_featured, product_images(image_url, sort_order)')
         .eq('slug', slug)
+        .eq('is_active', true)
         .maybeSingle()
 
       if (!error && data) {
-        setProduct(data as Product)
+        const mappedProduct = mapProductRow(data as unknown as ProductRow)
+        const statsMap = await fetchProductEngagementStats([mappedProduct.id])
+        setProduct(applyProductBadges([mappedProduct], statsMap)[0])
+        setActiveImageIndex(0)
       }
       setLoading(false)
     }
@@ -83,14 +131,34 @@ export default function ProductDetailsPage() {
   const isFavorite = isInWishlist(product.id)
   const detailDescription = product.description?.trim() || product.short_description?.trim() || ''
   const descriptionBlocks = parseDescriptionBlocks(detailDescription)
+  const displayImages = product.image_urls.length > 0 ? product.image_urls : ['/placeholder.png']
+  const activeImage = displayImages[activeImageIndex] || displayImages[0]
 
   return (
     <section className="container product-details">
-      <div className="product-detail-media">
-        <img src={product.thumbnail || '/placeholder.png'} alt={product.name} />
+      <div className={`product-detail-media ${displayImages.length > 1 ? 'has-thumbnails' : ''}`}>
+        {displayImages.length > 1 && (
+          <div className="product-detail-thumbnails" aria-label="Images du produit">
+            {displayImages.map((imageUrl, index) => (
+              <button
+                type="button"
+                key={`${imageUrl}-${index}`}
+                className={index === activeImageIndex ? 'active' : ''}
+                aria-label={`Afficher l'image ${index + 1}`}
+                aria-current={index === activeImageIndex}
+                onClick={() => setActiveImageIndex(index)}
+              >
+                <img src={imageUrl} alt={`${product.name} miniature ${index + 1}`} />
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="product-detail-main-image">
+          <img src={activeImage} alt={product.name} />
+        </div>
       </div>
       <div className="product-detail-copy">
-        <span className="eyebrow">Produit premium</span>
+        {product.badge_label && <span className="eyebrow">{product.badge_label}</span>}
         <h1>{product.name}</h1>
         {product.short_description && (
           <p className="product-detail-lead">{product.short_description}</p>

@@ -8,6 +8,7 @@ type Product = {
   price: number
   thumbnail: string | null
   image_urls?: (string | null)[] | null
+  badge_label?: string | null
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/useCart'
 import { useWishlist } from '../../context/useWishlist'
@@ -11,6 +11,7 @@ type Product = {
   price: number
   thumbnail: string | null
   image_urls?: (string | null)[] | null
+  badge_label?: string | null
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -19,7 +20,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const formattedPrice = `${product.price.toLocaleString('fr-FR')} FCFA`
   const isFavorite = isInWishlist(product.id)
   const description = product.short_description?.trim()
-  const [isPreviewingImages, setIsPreviewingImages] = useState(false)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const displayImages = useMemo(() => {
     const productImages = Array.from(
@@ -28,30 +28,22 @@ export default function ProductCard({ product }: { product: Product }) {
 
     return productImages.length > 0 ? productImages : ['/placeholder.png']
   }, [product.image_urls, product.thumbnail])
+  const hasGallery = displayImages.length > 1
 
-  useEffect(() => {
-    if (!isPreviewingImages || displayImages.length <= 1) {
-      setActiveImageIndex(0)
-      return
-    }
+  const showPreviousImage = () => {
+    setActiveImageIndex((currentIndex) =>
+      currentIndex === 0 ? displayImages.length - 1 : currentIndex - 1,
+    )
+  }
 
-    const intervalId = window.setInterval(() => {
-      setActiveImageIndex((currentIndex) => (currentIndex + 1) % displayImages.length)
-    }, 900)
-
-    return () => window.clearInterval(intervalId)
-  }, [displayImages.length, isPreviewingImages])
+  const showNextImage = () => {
+    setActiveImageIndex((currentIndex) => (currentIndex + 1) % displayImages.length)
+  }
 
   return (
     <div className="product-card">
-      <Link to={`/product/${product.slug}`} className="product-card-link">
-        <div
-          className={`product-image-wrap ${displayImages.length > 1 ? 'has-gallery' : ''}`}
-          onMouseEnter={() => setIsPreviewingImages(true)}
-          onMouseLeave={() => setIsPreviewingImages(false)}
-          onFocus={() => setIsPreviewingImages(true)}
-          onBlur={() => setIsPreviewingImages(false)}
-        >
+      <div className={`product-image-wrap ${hasGallery ? 'has-gallery' : ''}`}>
+        <Link to={`/product/${product.slug}`} className="product-image-link" aria-label={`Voir ${product.name}`}>
           {displayImages.map((imageUrl, index) => (
             <img
               key={`${imageUrl}-${index}`}
@@ -60,8 +52,45 @@ export default function ProductCard({ product }: { product: Product }) {
               alt={index === 0 ? product.name : `${product.name} image ${index + 1}`}
             />
           ))}
-          <span className="product-pill">Premium</span>
-        </div>
+          {product.badge_label && <span className="product-pill">{product.badge_label}</span>}
+        </Link>
+
+        {hasGallery && (
+          <>
+            <button
+              type="button"
+              className="product-gallery-button previous"
+              aria-label="Image precedente"
+              onClick={showPreviousImage}
+            >
+              <span aria-hidden="true">&lsaquo;</span>
+            </button>
+            <button
+              type="button"
+              className="product-gallery-button next"
+              aria-label="Image suivante"
+              onClick={showNextImage}
+            >
+              <span aria-hidden="true">&rsaquo;</span>
+            </button>
+
+            <div className="product-gallery-dots" aria-label="Images du produit">
+              {displayImages.map((imageUrl, index) => (
+                <button
+                  type="button"
+                  key={`${imageUrl}-dot-${index}`}
+                  className={index === activeImageIndex ? 'active' : ''}
+                  aria-label={`Afficher l'image ${index + 1}`}
+                  aria-current={index === activeImageIndex}
+                  onClick={() => setActiveImageIndex(index)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <Link to={`/product/${product.slug}`} className="product-card-link">
         <div className="product-card-body">
           <h3>{product.name}</h3>
           {description && <p className="product-card-description">{description}</p>}

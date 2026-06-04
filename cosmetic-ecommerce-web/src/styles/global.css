@@ -1196,6 +1196,12 @@ input:focus {
   gap: 0.9rem;
 }
 
+.product-image-link {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
 .product-image-wrap {
   position: relative;
   overflow: hidden;
@@ -1223,12 +1229,92 @@ input:focus {
 }
 
 .product-card:hover .product-image-wrap img,
-.product-card-link:focus-visible .product-image-wrap img {
+.product-image-link:focus-visible img {
   transform: scale(1.04);
+}
+
+.product-gallery-button {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.16);
+  opacity: 0.92;
+  transform: translateY(-50%);
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.product-gallery-button.previous {
+  left: 10px;
+}
+
+.product-gallery-button.next {
+  right: 10px;
+}
+
+.product-gallery-button span {
+  display: block;
+  margin-top: -2px;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.product-gallery-button:hover,
+.product-gallery-button:focus-visible {
+  background: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.product-image-wrap:hover .product-gallery-button,
+.product-image-wrap:focus-within .product-gallery-button {
+  opacity: 1;
+}
+
+.product-gallery-dots {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: 0.42rem;
+  pointer-events: none;
+}
+
+.product-gallery-dots button {
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 3px 10px rgba(17, 17, 17, 0.18);
+  padding: 0;
+  pointer-events: auto;
+  transition: background 0.2s ease, transform 0.2s ease, width 0.2s ease;
+}
+
+.product-gallery-dots button.active {
+  width: 22px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.product-gallery-dots button:hover,
+.product-gallery-dots button:focus-visible {
+  transform: scale(1.15);
 }
 
 .product-pill {
   position: absolute;
+  z-index: 2;
   left: 10px;
   top: 10px;
   border-radius: 999px;
@@ -1327,6 +1413,16 @@ input:focus {
 }
 
 .product-detail-media {
+  display: grid;
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.product-detail-media.has-thumbnails {
+  grid-template-columns: 86px minmax(0, 1fr);
+}
+
+.product-detail-main-image {
   overflow: hidden;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius);
@@ -1334,7 +1430,45 @@ input:focus {
   box-shadow: var(--shadow);
 }
 
-.product-detail-media img {
+.product-detail-media.has-thumbnails .product-detail-main-image {
+  grid-column: 2;
+}
+
+.product-detail-main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-detail-thumbnails {
+  display: grid;
+  gap: 0.65rem;
+  max-height: min(640px, calc(100vh - 140px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.product-detail-thumbnails button {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background: #f1eee8;
+  padding: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-detail-thumbnails button:hover,
+.product-detail-thumbnails button:focus-visible,
+.product-detail-thumbnails button.active {
+  border-color: var(--gold);
+  box-shadow: 0 8px 20px rgba(31, 24, 16, 0.12);
+  transform: translateY(-1px);
+}
+
+.product-detail-thumbnails img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2835,6 +2969,31 @@ input:focus {
 
   .hero-badge {
     justify-self: start;
+  }
+
+  .product-detail-media.has-thumbnails {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-media.has-thumbnails .product-detail-main-image {
+    grid-column: auto;
+  }
+
+  .product-detail-thumbnails {
+    grid-row: 2;
+    display: flex;
+    gap: 0.55rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: none;
+    padding: 0 0 0.3rem;
+    scroll-snap-type: inline mandatory;
+  }
+
+  .product-detail-thumbnails button {
+    width: 76px;
+    min-width: 76px;
+    scroll-snap-align: start;
   }
 
   .home-category-slide {
