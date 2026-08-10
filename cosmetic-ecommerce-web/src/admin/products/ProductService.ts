@@ -64,10 +64,8 @@ export async function fetchProducts() {
 }
 
 function getSafeProductPayload(payload: ProductInput) {
-  const { wholesale_price, wholesale_min_quantity, is_wholesale_enabled, ...safePayload } = payload
-
   return {
-    ...safePayload,
+    ...payload,
     ...(payload.is_recommended !== undefined ? { is_recommended: Boolean(payload.is_recommended) } : {}),
   }
 }
@@ -88,7 +86,8 @@ export async function createProduct(payload: ProductInput) {
     const message = error instanceof Error ? error.message : String(error)
 
     if (message.includes('is_recommended') || message.includes('does not exist')) {
-      const { is_recommended: _ignored, ...fallbackPayload } = basePayload
+      const { is_recommended, ...fallbackPayload } = basePayload
+      void is_recommended
       const { data, error: fallbackError } = await supabase
         .from('products')
         .insert(fallbackPayload)
@@ -120,7 +119,8 @@ export async function updateProduct(id: string, payload: ProductInput) {
     const message = error instanceof Error ? error.message : String(error)
 
     if (message.includes('is_recommended') || message.includes('does not exist')) {
-      const { is_recommended: _ignored, ...fallbackPayload } = basePayload
+      const { is_recommended, ...fallbackPayload } = basePayload
+      void is_recommended
       const { data, error: fallbackError } = await supabase
         .from('products')
         .update(fallbackPayload)

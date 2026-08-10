@@ -105,10 +105,12 @@ export default function CatalogPage() {
   }, [])
 
   useEffect(() => {
-    const categoryFromUrl = searchParams.get('category')
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl)
-    }
+    const timer = window.setTimeout(() => {
+      const categoryFromUrl = searchParams.get('category')
+      if (categoryFromUrl) setSelectedCategory(categoryFromUrl)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [searchParams])
 
   const selectCategory = (categoryId: string) => {

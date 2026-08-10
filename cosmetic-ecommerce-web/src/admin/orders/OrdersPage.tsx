@@ -56,6 +56,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [savingOrderId, setSavingOrderId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [filterReferenceTime] = useState(() => Date.now())
 
   const totalRevenue = useMemo(
     () =>
@@ -79,7 +80,6 @@ export default function OrdersPage() {
   )
 
   const filteredOrders = useMemo(() => {
-    const now = Date.now()
     const query = searchTerm.trim().toLowerCase()
 
     return orders.filter((order) => {
@@ -100,9 +100,9 @@ export default function OrdersPage() {
       const createdAt = new Date(order.created_at).getTime()
       const isInDateRange =
         dateFilter === 'all' ||
-        (dateFilter === 'today' && now - createdAt <= 24 * 60 * 60 * 1000) ||
-        (dateFilter === 'week' && now - createdAt <= 7 * 24 * 60 * 60 * 1000) ||
-        (dateFilter === 'month' && now - createdAt <= 30 * 24 * 60 * 60 * 1000)
+        (dateFilter === 'today' && filterReferenceTime - createdAt <= 24 * 60 * 60 * 1000) ||
+        (dateFilter === 'week' && filterReferenceTime - createdAt <= 7 * 24 * 60 * 60 * 1000) ||
+        (dateFilter === 'month' && filterReferenceTime - createdAt <= 30 * 24 * 60 * 60 * 1000)
 
       return (
         (!query || haystack.includes(query)) &&
@@ -112,7 +112,7 @@ export default function OrdersPage() {
         isInDateRange
       )
     })
-  }, [dateFilter, methodFilter, orders, paymentFilter, searchTerm, statusFilter])
+  }, [dateFilter, filterReferenceTime, methodFilter, orders, paymentFilter, searchTerm, statusFilter])
 
   const resetFilters = () => {
     setSearchTerm('')
@@ -137,7 +137,8 @@ export default function OrdersPage() {
   }
 
   useEffect(() => {
-    void loadOrders()
+    const timer = window.setTimeout(() => void loadOrders(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const handleStatusChange = async (id: string, status: AdminOrderStatus) => {

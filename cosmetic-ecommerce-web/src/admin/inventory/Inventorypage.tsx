@@ -36,7 +36,8 @@ export default function InventoryPage() {
   }
 
   useEffect(() => {
-    void loadProducts()
+    const timer = window.setTimeout(() => void loadProducts(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const stats = useMemo(() => {
