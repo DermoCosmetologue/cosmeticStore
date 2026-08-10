@@ -9,15 +9,28 @@ type Product = {
   slug: string
   short_description: string | null
   price: number
+  wholesale_price?: number | null
+  wholesale_min_quantity?: number | null
+  is_wholesale_enabled?: boolean | null
   thumbnail: string | null
   image_urls?: (string | null)[] | null
   badge_label?: string | null
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+type DisplayMode = 'retail' | 'wholesale'
+
+export default function ProductCard({ product, displayMode = 'retail' }: { product: Product; displayMode?: DisplayMode }) {
   const { addToCart } = useCart()
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const formattedPrice = `${product.price.toLocaleString('fr-FR')} FCFA`
+  const wholesalePrice = product.is_wholesale_enabled ? Number(product.wholesale_price ?? product.price) : product.price
+  const effectivePrice = displayMode === 'wholesale' ? wholesalePrice : product.price
+  const formattedPrice = `${effectivePrice.toLocaleString('fr-FR')} FCFA`
+  const minQtyText = product.wholesale_min_quantity && product.wholesale_min_quantity > 0
+    ? `À partir de ${product.wholesale_min_quantity} unités`
+    : 'Quantité sur devis'
+  const priceLabel = displayMode === 'wholesale'
+    ? (product.is_wholesale_enabled ? 'Prix gros' : 'Boutique uniquement')
+    : 'Prix boutique'
   const isFavorite = isInWishlist(product.id)
   const description = product.short_description?.trim()
   const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -89,9 +102,19 @@ export default function ProductCard({ product }: { product: Product }) {
           <h3>{product.name}</h3>
           {description && <p className="product-card-description">{description}</p>}
           <div className="product-card-meta">
-            <span>Disponible boutique</span>
+            <span>{priceLabel}</span>
             <strong>{formattedPrice}</strong>
           </div>
+          {displayMode === 'retail' && product.is_wholesale_enabled && product.wholesale_price != null && (
+            <div className="product-card-wholesale-meta">
+              <small>Prix gros dès 50 pièces : {wholesalePrice.toLocaleString('fr-FR')} FCFA</small>
+            </div>
+          )}
+          {displayMode === 'wholesale' && (
+            <div className="product-card-wholesale-meta">
+              <small>{product.is_wholesale_enabled ? minQtyText : 'Mode boutique'}</small>
+            </div>
+          )}
         </div>
       </Link>
 
@@ -123,8 +146,12 @@ export default function ProductCard({ product }: { product: Product }) {
               id: product.id,
               name: product.name,
               price: product.price,
+              retailPrice: product.price,
+              wholesalePrice: product.is_wholesale_enabled ? wholesalePrice : null,
+              isWholesaleEnabled: Boolean(product.is_wholesale_enabled),
               slug: product.slug,
               thumbnail: product.thumbnail,
+              salesMode: displayMode,
             })
           }
         >

@@ -161,7 +161,6 @@ export default function HomePage() {
   }, [])
 
   const heroSrc = homeContent.hero.image_url || heroImage
-  const editorialSrc = homeContent.editorial.image_url || heroImage
   const categoryCarouselItems = categories.length > 1 ? [...categories, ...categories] : categories
   const showcaseCarouselItems =
     showcaseProducts.length > 1 ? [...showcaseProducts, ...showcaseProducts] : showcaseProducts
@@ -281,7 +280,7 @@ export default function HomePage() {
             </div>
 
             <div className="editorial-panel">
-              <img src={editorialSrc} alt="Details de cosmetiques luxe" />
+              <img src={homeContent.editorial.image_url || heroImage} alt="Details de cosmetiques luxe" />
               <div>
                 <span className="eyebrow">{homeContent.editorial.label}</span>
                 <h3>{homeContent.editorial.heading}</h3>

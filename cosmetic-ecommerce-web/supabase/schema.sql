@@ -162,6 +162,9 @@ create table if not exists public.products (
   description text,
   short_description text,
   price numeric(12,2) not null check (price >= 0),
+  wholesale_price numeric(12,2) default null check (wholesale_price is null or wholesale_price >= 0),
+  wholesale_min_quantity integer not null default 0 check (wholesale_min_quantity >= 0),
+  is_wholesale_enabled boolean not null default false,
   compare_at_price numeric(12,2),
   sku text unique,
   stock integer not null default 0 check (stock >= 0),
@@ -171,6 +174,7 @@ create table if not exists public.products (
   size text,
   shade text,
   is_featured boolean not null default false,
+  is_recommended boolean not null default false,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -335,10 +339,13 @@ declare
   v_item jsonb;
   v_product_id uuid;
   v_product_price numeric(12,2);
+  v_product_wholesale_price numeric(12,2);
+  v_product_wholesale_enabled boolean;
   v_product_stock integer;
   v_product_name text;
   v_product_thumbnail text;
   v_qty integer;
+  v_total_quantity integer := 0;
   v_unit_price numeric(12,2);
 begin
   if auth.uid() is null or auth.uid() <> p_user_id then
@@ -347,6 +354,14 @@ begin
 
   if jsonb_array_length(p_items) = 0 then
     raise exception 'Panier vide';
+  end if;
+
+  select coalesce(sum(coalesce((item->>'quantity')::int, 1)), 0)
+  into v_total_quantity
+  from jsonb_array_elements(p_items) as item;
+
+  if v_total_quantity <= 0 then
+    raise exception 'Quantite de commande invalide';
   end if;
 
   insert into public.profiles (id, full_name, role)
@@ -403,6 +418,8 @@ begin
     select
       p.id,
       p.price,
+      p.wholesale_price,
+      p.is_wholesale_enabled,
       p.stock,
       p.name,
       (
@@ -412,7 +429,7 @@ begin
         order by pi.sort_order asc, pi.created_at asc
         limit 1
       ) as thumbnail
-    into v_product_id, v_product_price, v_product_stock, v_product_name, v_product_thumbnail
+    into v_product_id, v_product_price, v_product_wholesale_price, v_product_wholesale_enabled, v_product_stock, v_product_name, v_product_thumbnail
     from public.products p
     where p.id = (v_item->>'product_id')::uuid
       and p.is_active = true;
@@ -427,7 +444,13 @@ begin
       raise exception 'Stock insuffisant pour le produit %', v_product_name;
     end if;
 
-    v_unit_price := v_product_price;
+    v_unit_price := case
+      when v_total_quantity >= 50
+        and v_product_wholesale_enabled = true
+        and v_product_wholesale_price is not null
+      then v_product_wholesale_price
+      else v_product_price
+    end;
 
     insert into public.order_items (
       order_id,
@@ -866,6 +889,9 @@ select
   p.description,
   p.short_description,
   p.price,
+  p.wholesale_price,
+  p.wholesale_min_quantity,
+  p.is_wholesale_enabled,
   p.compare_at_price,
   p.stock,
   p.brand,

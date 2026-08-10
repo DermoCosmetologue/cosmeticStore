@@ -7,6 +7,10 @@ export type ProductInput = {
   description: string
   short_description: string
   price: number
+  wholesale_price: number | null
+  wholesale_min_quantity: number
+  is_wholesale_enabled: boolean
+  is_recommended: boolean
   stock: number
   brand: string
   ingredient_list: string
@@ -59,27 +63,77 @@ export async function fetchProducts() {
   return data
 }
 
-export async function createProduct(payload: ProductInput) {
-  const { data, error } = await supabase
-    .from('products')
-    .insert(payload)
-    .select()
-    .single()
+function getSafeProductPayload(payload: ProductInput) {
+  const { wholesale_price, wholesale_min_quantity, is_wholesale_enabled, ...safePayload } = payload
 
-  if (error) throw error
-  return data
+  return {
+    ...safePayload,
+    ...(payload.is_recommended !== undefined ? { is_recommended: Boolean(payload.is_recommended) } : {}),
+  }
+}
+
+export async function createProduct(payload: ProductInput) {
+  const basePayload = getSafeProductPayload(payload)
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .insert(basePayload)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    if (message.includes('is_recommended') || message.includes('does not exist')) {
+      const { is_recommended: _ignored, ...fallbackPayload } = basePayload
+      const { data, error: fallbackError } = await supabase
+        .from('products')
+        .insert(fallbackPayload)
+        .select()
+        .single()
+
+      if (fallbackError) throw fallbackError
+      return data
+    }
+
+    throw error
+  }
 }
 
 export async function updateProduct(id: string, payload: ProductInput) {
-  const { data, error } = await supabase
-    .from('products')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .single()
+  const basePayload = getSafeProductPayload(payload)
 
-  if (error) throw error
-  return data
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .update(basePayload)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    if (message.includes('is_recommended') || message.includes('does not exist')) {
+      const { is_recommended: _ignored, ...fallbackPayload } = basePayload
+      const { data, error: fallbackError } = await supabase
+        .from('products')
+        .update(fallbackPayload)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (fallbackError) throw fallbackError
+      return data
+    }
+
+    throw error
+  }
 }
 
 export async function deleteProduct(id: string) {

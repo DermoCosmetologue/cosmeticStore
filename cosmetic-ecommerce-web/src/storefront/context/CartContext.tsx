@@ -8,9 +8,13 @@ export type CartItem = {
   id: string
   name: string
   price: number
+  retailPrice?: number
+  wholesalePrice?: number | null
+  isWholesaleEnabled?: boolean
   slug: string
   thumbnail: string | null
   quantity: number
+  salesMode?: 'retail' | 'wholesale'
 }
 
 export type CartContextType = {
@@ -22,6 +26,9 @@ export type CartContextType = {
   clearCart: () => void
   totalItems: number
   totalPrice: number
+  isWholesaleOrder: boolean
+  remainingForWholesale: number
+  getItemUnitPrice: (item: CartItem) => number
 }
 
 function isCartItems(value: unknown): value is CartItem[] {
@@ -86,10 +93,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const totalItems = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items])
+  const isWholesaleOrder = totalItems >= 50
+  const getItemUnitPrice = useCallback((item: CartItem) => {
+    if (isWholesaleOrder && item.isWholesaleEnabled && item.wholesalePrice != null) return item.wholesalePrice
+    return item.retailPrice ?? item.price
+  }, [isWholesaleOrder])
   const totalPrice = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity * item.price, 0),
-    [items],
+    () => items.reduce((sum, item) => sum + item.quantity * getItemUnitPrice(item), 0),
+    [getItemUnitPrice, items],
   )
+  const remainingForWholesale = Math.max(0, 50 - totalItems)
   const contextValue = useMemo(
     () => ({
       items,
@@ -100,8 +113,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       totalItems,
       totalPrice,
+      isWholesaleOrder,
+      remainingForWholesale,
+      getItemUnitPrice,
     }),
-    [addToCart, clearCart, items, removeFromCart, setCartItems, totalItems, totalPrice, updateQuantity],
+    [addToCart, clearCart, getItemUnitPrice, isWholesaleOrder, items, remainingForWholesale, removeFromCart, setCartItems, totalItems, totalPrice, updateQuantity],
   )
 
   return (

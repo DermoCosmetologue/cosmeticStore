@@ -41,7 +41,7 @@ function getCheckoutErrorMessage(error: unknown) {
 }
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart()
+  const { items, totalPrice, totalItems, clearCart, isWholesaleOrder } = useCart()
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -179,8 +179,8 @@ export default function CheckoutPage() {
 
         <aside className="checkout-summary">
           <span className="eyebrow">Résumé</span>
-          <p>{items.length} produit(s)</p>
-          <strong>Total : {totalPrice.toLocaleString('fr-FR')} FCFA</strong>
+          <p>{totalItems} pièce(s) · {items.length} produit(s)</p>
+          <strong>{isWholesaleOrder ? 'Total grossiste' : 'Total normal'} : {totalPrice.toLocaleString('fr-FR')} FCFA</strong>
         </aside>
       </div>
     </section>

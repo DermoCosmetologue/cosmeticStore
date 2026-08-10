@@ -11,7 +11,15 @@ type Product = {
   badge_label?: string | null
 }
 
-export default function ProductGrid({ products }: { products: Product[] }) {
+type DisplayMode = 'retail' | 'wholesale'
+
+export default function ProductGrid({
+  products,
+  displayMode = 'retail',
+}: {
+  products: Product[]
+  displayMode?: DisplayMode
+}) {
   if (products.length === 0) {
     return (
       <div className="empty-state inline">
@@ -24,7 +32,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   return (
     <div className="grid">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} displayMode={displayMode} />
       ))}
     </div>
   )

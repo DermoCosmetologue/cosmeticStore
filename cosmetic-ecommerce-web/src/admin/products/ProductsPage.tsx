@@ -40,6 +40,10 @@ const emptyForm: ProductInput = {
   description: '',
   short_description: '',
   price: 0,
+  wholesale_price: null,
+  wholesale_min_quantity: 0,
+  is_wholesale_enabled: false,
+  is_recommended: false,
   stock: 0,
   brand: '',
   ingredient_list: '',
@@ -163,6 +167,13 @@ export default function ProductsPage() {
         productId = createdProduct.id
       }
 
+      const productPayload = {
+        ...form,
+        wholesale_price: form.is_wholesale_enabled ? form.wholesale_price : null,
+        wholesale_min_quantity: form.is_wholesale_enabled ? form.wholesale_min_quantity : 0,
+        is_wholesale_enabled: form.is_wholesale_enabled,
+      }
+
       const uploadedUrls = productId && imageFiles.length > 0
         ? await uploadProductImageFiles(productId, imageFiles)
         : []
@@ -170,7 +181,7 @@ export default function ProductsPage() {
         ? await uploadProductDescriptionImageFiles(productId, descriptionImageFiles)
         : []
       const finalPayload = {
-        ...form,
+        ...productPayload,
         description: appendDescriptionImages(
           form.description,
           [...descriptionUrlImages, ...uploadedDescriptionUrls],
@@ -220,6 +231,10 @@ export default function ProductsPage() {
       description: product.description || '',
       short_description: product.short_description || '',
       price: Number(product.price || 0),
+      wholesale_price: product.wholesale_price != null ? Number(product.wholesale_price) : null,
+      wholesale_min_quantity: Number(product.wholesale_min_quantity || 0),
+      is_wholesale_enabled: Boolean(product.is_wholesale_enabled),
+      is_recommended: Boolean(product.is_recommended),
       stock: Number(product.stock || 0),
       brand: product.brand || '',
       ingredient_list: product.ingredient_list || '',
@@ -424,7 +439,7 @@ export default function ProductsPage() {
 
           <div className="admin-form-grid">
             <label>
-              Prix
+              Prix boutique
               <input name="price" type="number" min="0" value={form.price} onChange={handleChange} />
             </label>
             <label>
@@ -432,6 +447,48 @@ export default function ProductsPage() {
               <input name="stock" type="number" min="0" value={form.stock} onChange={handleChange} />
             </label>
           </div>
+
+          <div className="admin-toggle-row">
+            <label>
+              <input
+                type="checkbox"
+                name="is_wholesale_enabled"
+                checked={form.is_wholesale_enabled}
+                onChange={handleChange}
+              />
+              Activer la vente en gros
+            </label>
+          </div>
+
+          {form.is_wholesale_enabled && (
+            <div className="admin-form-grid">
+              <label>
+                Prix gros
+                <input
+                  name="wholesale_price"
+                  type="number"
+                  min="0"
+                  value={form.wholesale_price ?? ''}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      wholesale_price: event.target.value === '' ? null : Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Seuil gros (50 pièces pour toute la commande)
+                <input
+                  name="wholesale_min_quantity"
+                  type="number"
+                  min="0"
+                  value={form.wholesale_min_quantity}
+                  onChange={handleChange}
+                />
+              </label>
+            </div>
+          )}
 
           <div className="admin-form-grid">
             <label>
@@ -509,6 +566,10 @@ export default function ProductsPage() {
             <label>
               <input type="checkbox" name="is_featured" checked={form.is_featured} onChange={handleChange} />
               Produit vedette
+            </label>
+            <label>
+              <input type="checkbox" name="is_recommended" checked={form.is_recommended} onChange={handleChange} />
+              Recommandé
             </label>
             <label>
               <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} />

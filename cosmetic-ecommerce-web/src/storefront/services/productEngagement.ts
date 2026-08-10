@@ -11,6 +11,7 @@ export type ProductEngagementStat = {
 export type BadgeableProduct = {
   id: string
   is_featured?: boolean
+  is_recommended?: boolean
   badge_label?: string | null
 }
 
@@ -27,7 +28,9 @@ export async function fetchProductEngagementStats(productIds: string[]) {
     .in('product_id', uniqueProductIds)
 
   if (error) {
-    console.warn('Product engagement stats unavailable.', error)
+    if (error.code !== 'PGRST205') {
+      console.warn('Product engagement stats unavailable.', error)
+    }
     return new Map<string, ProductEngagementStat>()
   }
 
@@ -59,6 +62,8 @@ export function applyProductBadges<TProduct extends BadgeableProduct>(
 
     if (product.is_featured) {
       badgeLabel = 'Produit vedette'
+    } else if (product.is_recommended) {
+      badgeLabel = 'Recommandé'
     } else if (stat?.wishlist_count && stat.wishlist_count >= 3 && stat.wishlist_count === maxWishlistCount) {
       badgeLabel = 'Meilleur produit'
     } else if (stat?.order_count && stat.order_count >= 5 && stat.order_count === maxOrderCount) {

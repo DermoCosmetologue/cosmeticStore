@@ -12,6 +12,9 @@ type Product = {
   slug: string
   short_description: string | null
   price: number
+  wholesale_price?: number | null
+  wholesale_min_quantity?: number | null
+  is_wholesale_enabled?: boolean | null
   thumbnail: string | null
   image_urls: string[]
   is_featured: boolean
@@ -31,6 +34,9 @@ type ProductRow = {
   slug: string
   short_description: string | null
   price: number
+  wholesale_price?: number | null
+  wholesale_min_quantity?: number | null
+  is_wholesale_enabled?: boolean | null
   is_featured: boolean
   product_images?: ProductImage[] | null
 }
@@ -58,6 +64,9 @@ function mapProductRow(row: ProductRow): Product {
     slug: row.slug,
     short_description: row.short_description,
     price: Number(row.price || 0),
+    wholesale_price: row.wholesale_price != null ? Number(row.wholesale_price) : null,
+    wholesale_min_quantity: row.wholesale_min_quantity != null ? Number(row.wholesale_min_quantity) : null,
+    is_wholesale_enabled: Boolean(row.is_wholesale_enabled),
     thumbnail: imageUrls[0] || null,
     image_urls: imageUrls,
     is_featured: Boolean(row.is_featured),
@@ -65,6 +74,7 @@ function mapProductRow(row: ProductRow): Product {
 }
 
 type SortOption = 'featured' | 'price-asc' | 'price-desc' | 'name'
+type DisplayMode = 'retail' | 'wholesale'
 
 export default function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -74,12 +84,13 @@ export default function CatalogPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [sortOption, setSortOption] = useState<SortOption>('featured')
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('retail')
 
   useEffect(() => {
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, category_id, name, slug, short_description, price, is_featured, categories(name), product_images(image_url, sort_order)')
+        .select('id, category_id, name, slug, short_description, price, wholesale_price, wholesale_min_quantity, is_wholesale_enabled, is_featured, categories(name), product_images(image_url, sort_order)')
         .eq('is_active', true)
 
       if (!error && data) {
@@ -177,6 +188,37 @@ export default function CatalogPage() {
         <p>Des essentiels selectionnes pour construire une routine soignee, sensorielle et efficace.</p>
       </div>
 
+      <div className="catalog-mode-switch" aria-label="Choisir l'espace boutique ou gros">
+        <button
+          type="button"
+          className={displayMode === 'retail' ? 'active' : ''}
+          onClick={() => setDisplayMode('retail')}
+        >
+          Boutique
+        </button>
+        <button
+          type="button"
+          className={displayMode === 'wholesale' ? 'active' : ''}
+          onClick={() => setDisplayMode('wholesale')}
+        >
+          Vente en gros
+        </button>
+      </div>
+
+      <div className={`catalog-mode-banner ${displayMode === 'wholesale' ? 'wholesale' : 'retail'}`}>
+        {displayMode === 'wholesale' ? (
+          <>
+            <span className="eyebrow">Espace grossiste</span>
+            <strong>Les prix de gros sont automatiquement appliqués dès 50 pièces dans le panier.</strong>
+          </>
+        ) : (
+          <>
+            <span className="eyebrow">Espace boutique</span>
+            <strong>À partir de 50 pièces, la commande bascule automatiquement aux prix de gros.</strong>
+          </>
+        )}
+      </div>
+
       <div className="catalog-filter-panel">
         <label>
           Rechercher
@@ -268,7 +310,7 @@ export default function CatalogPage() {
                 </div>
                 <span>{category.products.length} produit(s)</span>
               </div>
-              <ProductGrid products={category.products} />
+              <ProductGrid products={category.products} displayMode={displayMode} />
             </section>
           ))}
         </div>
@@ -281,7 +323,7 @@ export default function CatalogPage() {
             </div>
             <span>{filteredProducts.length} produit(s)</span>
           </div>
-          <ProductGrid products={filteredProducts} />
+          <ProductGrid products={filteredProducts} displayMode={displayMode} />
         </div>
       )}
     </section>

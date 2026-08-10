@@ -3,7 +3,7 @@ import { useCart } from '../context/useCart'
 import CartItemRow from '../components/CartItemRow'
 
 export default function CartPage() {
-  const { items, totalPrice, totalItems, clearCart } = useCart()
+  const { items, totalPrice, totalItems, clearCart, isWholesaleOrder, remainingForWholesale } = useCart()
   const formattedTotal = `${totalPrice.toLocaleString('fr-FR')} FCFA`
 
   if (items.length === 0) {
@@ -25,6 +25,20 @@ export default function CartPage() {
         <p>{totalItems} article(s) dans votre sélection.</p>
       </div>
 
+      <div className={`cart-order-banner ${isWholesaleOrder ? 'wholesale' : 'retail'}`}>
+        {isWholesaleOrder ? (
+          <>
+            <span className="eyebrow">Commande grossiste</span>
+            <strong>Votre commande atteint 50 pièces ou plus : les prix de gros sont appliqués automatiquement.</strong>
+          </>
+        ) : (
+          <>
+            <span className="eyebrow">Commande boutique</span>
+            <strong>Ajoutez encore {remainingForWholesale} pièce(s) pour profiter automatiquement des prix de gros.</strong>
+          </>
+        )}
+      </div>
+
       <div className="cart-layout">
         <div className="cart-list">
           {items.map((item) => (
@@ -35,7 +49,7 @@ export default function CartPage() {
         <aside className="cart-summary">
           <span className="eyebrow">Résumé</span>
           <div className="summary-line">
-            <span>Sous-total</span>
+            <span>{isWholesaleOrder ? 'Total grossiste' : 'Sous-total'}</span>
             <strong>{formattedTotal}</strong>
           </div>
           <div className="summary-line muted">

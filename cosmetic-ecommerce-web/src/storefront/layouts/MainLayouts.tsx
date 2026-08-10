@@ -71,7 +71,8 @@ export default function MainLayout() {
   const { user, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE?.replace(/\D/g, '')
+  const whatsappPhone =
+    import.meta.env.VITE_WHATSAPP_PHONE?.replace(/\D/g, '') || '0709969567'
   const whatsappMessage =
     import.meta.env.VITE_WHATSAPP_MESSAGE ||
     'Bonjour, je souhaite avoir des informations sur vos produits.'
@@ -94,11 +95,10 @@ export default function MainLayout() {
     <div className="site-shell">
       <header className="header" aria-label="Navigation principale">
         <div className="container header-inner">
-          <Link to="/" className="logo" aria-label="SyShine Cosmetic accueil" onClick={closeMenu}>
-            <span className="logo-mark">
-              <img src="/syshine-logo.webp" alt="" />
+          <Link to="/" className="logo logo-brand" aria-label="Dermocosmetologue accueil" onClick={closeMenu}>
+            <span className="logo-mark logo-mark-custom">
+              <img src="/dermo-logo.svg" alt="Dermocosmetologue" />
             </span>
-            <span>SyShine Cosmetic</span>
           </Link>
 
           <button
@@ -180,13 +180,7 @@ export default function MainLayout() {
       <footer className="footer">
         <div className="container footer-inner">
           <div>
-            <Link to="/" className="logo footer-logo">
-              <span className="logo-mark">
-                <img src="/syshine-logo.webp" alt="" />
-              </span>
-              <span>SyShine Cosmetic</span>
-            </Link>
-            <p>Beaute premium, selectionnee avec soin par SyShine Cosmetic.</p>
+            <p>Beauté premium, sélectionnée avec soin par Dermocosmetologue.</p>
             <p className="footer-signature">Conçu par Yvannti T.I KOUAME - Copyright 2026</p>
           </div>
 
