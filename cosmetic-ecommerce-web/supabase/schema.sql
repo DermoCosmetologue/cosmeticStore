@@ -229,7 +229,7 @@ create table if not exists public.product_images (
 -- =========================================================
 create table if not exists public.addresses (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete cascade,
   label text,
   full_name text not null,
   phone text not null,
@@ -265,7 +265,7 @@ create table if not exists public.cart_items (
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   order_number text unique,
-  user_id uuid not null references public.profiles(id) on delete restrict,
+  user_id uuid references public.profiles(id) on delete restrict,
   address_id uuid references public.addresses(id) on delete set null,
   status text not null default 'pending_payment' check (status in ('pending_payment','pending','paid','processing','shipped','delivered','cancelled','refunded')),
   subtotal numeric(12,2) not null default 0 check (subtotal >= 0),
@@ -528,7 +528,7 @@ begin
 end;
 $$;
 
-grant execute on function public.create_order_with_items(uuid, jsonb, jsonb, text, text) to authenticated;
+grant execute on function public.create_order_with_items(uuid, jsonb, jsonb, text, text) to anon, authenticated;
 
 -- =========================================================
 -- INDEXES

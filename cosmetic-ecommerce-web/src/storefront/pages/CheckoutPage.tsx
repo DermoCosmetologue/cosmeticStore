@@ -67,7 +67,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (!user) {
+  if (!user && false) {
     return (
       <section className="container empty-state">
         <span className="eyebrow">Compte client</span>
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
 
     try {
       const orderId = await createOrderWithItems({
-        userId: user.id,
+        userId: user?.id,
         address: {
           full_name: fullName,
           phone,

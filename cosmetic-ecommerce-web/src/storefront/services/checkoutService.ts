@@ -18,14 +18,14 @@ type AddressInput = {
 }
 
 export async function createOrderWithItems(params: {
-  userId: string
+  userId?: string | null
   address: AddressInput
   items: CartItem[]
   paymentMethod?: string | null
   notes?: string | null
 }) {
   const { data, error } = await supabase.rpc('create_order_with_items', {
-    p_user_id: params.userId,
+    p_user_id: params.userId ?? null,
     p_address: params.address,
     p_items: params.items.map((item) => ({
       product_id: item.id,
