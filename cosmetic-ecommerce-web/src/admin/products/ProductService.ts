@@ -39,7 +39,12 @@ const OPTIONAL_PRODUCT_COLUMNS = [
 ] as const
 
 function getMissingProductColumn(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error)
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error !== null && 'message' in error
+        ? String(error.message)
+        : String(error)
   const match = message.match(/(?:column of 'products'|column)\s+['\"]?([a-z_]+)['\"]?/i)
   const column = match?.[1]
 

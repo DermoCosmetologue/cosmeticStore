@@ -78,7 +78,12 @@ function appendDescriptionImages(description: string, imageUrls: string[], produ
 }
 
 function getSaveErrorMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error)
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error !== null && 'message' in error
+        ? String(error.message)
+        : String(error)
 
   if (/row-level security|permission denied|not authorized/i.test(message)) {
     return "Enregistrement refuse : votre compte n'a pas les droits administrateur Supabase."
