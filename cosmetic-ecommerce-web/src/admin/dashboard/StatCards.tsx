@@ -3,6 +3,8 @@ type DashboardStats = {
   orders: number
   paidOrders: number
   activeCustomers: number
+  dailyOrders: number
+  dailyCustomers: number
   productsCount: number
   conversionRate: number
   averageOrderValue: number
@@ -24,6 +26,16 @@ export default function StatCards({ stats }: { stats: DashboardStats }) {
       label: 'Clients actifs',
       value: stats.activeCustomers.toLocaleString('fr-FR'),
       hint: 'Clients ayant commande',
+    },
+    {
+      label: 'Clients du jour',
+      value: stats.dailyCustomers.toLocaleString('fr-FR'),
+      hint: 'Clients ayant commande aujourd’hui',
+    },
+    {
+      label: 'Commandes du jour',
+      value: stats.dailyOrders.toLocaleString('fr-FR'),
+      hint: 'Commandes créées aujourd’hui',
     },
     {
       label: 'Panier moyen',

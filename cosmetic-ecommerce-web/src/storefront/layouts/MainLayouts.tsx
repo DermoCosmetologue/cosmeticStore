@@ -164,6 +164,15 @@ export default function MainLayout() {
         <Outlet />
       </main>
 
+      <Link
+        to="/cart"
+        className="cart-float"
+        aria-label={totalItems > 0 ? `Voir le panier, ${totalItems} article${totalItems > 1 ? 's' : ''}` : 'Voir le panier'}
+      >
+        <NavIcon name="cart" />
+        {totalItems > 0 && <span className="cart-float-count">{totalItems}</span>}
+      </Link>
+
       {whatsappUrl && (
         <a
           href={whatsappUrl}

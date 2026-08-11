@@ -364,6 +364,49 @@ input:focus {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.cart-float {
+  position: fixed;
+  right: 22px;
+  bottom: 90px;
+  z-index: 25;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 16px 34px rgba(80, 91, 64, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-float:hover {
+  box-shadow: 0 18px 42px rgba(80, 91, 64, 0.34);
+  transform: translateY(-2px);
+}
+
+.cart-float .nav-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.cart-float-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--rose);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .whatsapp-float:hover {
   box-shadow: 0 18px 42px rgba(18, 140, 126, 0.34);
   transform: translateY(-2px);
@@ -377,6 +420,21 @@ input:focus {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
+}
+
+.tiktok-section {
+  display: grid;
+  justify-items: center;
+}
+
+.tiktok-section .section-heading {
+  width: 100%;
+}
+
+.tiktok-section .tiktok-embed {
+  width: min(100%, 780px);
+  min-width: min(288px, 100%);
+  margin: 0;
 }
 
 .hero-section {
@@ -1464,6 +1522,10 @@ input:focus {
 
 .product-card-actions .btn-secondary {
   flex: 1;
+}
+
+.product-card-actions .qty-selector {
+  flex: 0 0 auto;
 }
 
 .wishlist-button {
@@ -3268,6 +3330,11 @@ input:focus {
     padding: 0;
   }
 
+  .cart-float {
+    right: 14px;
+    bottom: 78px;
+  }
+
   .whatsapp-float span {
     position: absolute;
     width: 1px;
@@ -3359,7 +3426,23 @@ input:focus {
 
   .product-card-actions {
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 44px 90px minmax(0, 1fr);
+    gap: 0.4rem;
+  }
+
+  .product-card-actions .wishlist-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .product-card-actions .qty-selector {
+    grid-template-columns: repeat(3, 30px);
+  }
+
+  .product-card-actions .qty-selector button,
+  .product-card-actions .qty-selector span {
+    width: 30px;
+    height: 44px;
   }
 
   .product-card-actions .btn-secondary {

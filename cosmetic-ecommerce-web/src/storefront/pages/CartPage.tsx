@@ -61,6 +61,7 @@ export default function CartPage() {
             <span>Calculée au checkout</span>
           </div>
           <Link to="/checkout" className="btn-primary">Passer à la caisse</Link>
+          <Link to="/catalog" className="btn-secondary">Continuer mes achats</Link>
           <button className="btn-text" onClick={clearCart}>Vider le panier</button>
         </aside>
       </div>

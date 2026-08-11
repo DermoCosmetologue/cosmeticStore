@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/useCart'
 import { useWishlist } from '../../context/useWishlist'
+import QuantitySelector from '../QuantitySelector'
 
 type Product = {
   id: string
@@ -34,6 +35,7 @@ export default function ProductCard({ product, displayMode = 'retail' }: { produ
   const isFavorite = isInWishlist(product.id)
   const description = product.short_description?.trim()
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [selectedQuantity, setSelectedQuantity] = useState(1)
   const displayImages = useMemo(() => {
     const productImages = Array.from(
       new Set([product.thumbnail, ...(product.image_urls ?? [])].filter(Boolean) as string[]),
@@ -139,6 +141,11 @@ export default function ProductCard({ product, displayMode = 'retail' }: { produ
             <path d="M20.8 8.6c0 5.1-8.8 10.4-8.8 10.4S3.2 13.7 3.2 8.6A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8.8 2.2Z" />
           </svg>
         </button>
+        <QuantitySelector
+          quantity={selectedQuantity}
+          onDecrease={() => setSelectedQuantity((quantity) => Math.max(1, quantity - 1))}
+          onIncrease={() => setSelectedQuantity((quantity) => quantity + 1)}
+        />
         <button
           className="btn-secondary"
           onClick={() =>
@@ -152,10 +159,10 @@ export default function ProductCard({ product, displayMode = 'retail' }: { produ
               slug: product.slug,
               thumbnail: product.thumbnail,
               salesMode: displayMode,
-            })
+            }, selectedQuantity)
           }
         >
-          Ajouter au panier
+          Ajouter {selectedQuantity} au panier
         </button>
       </div>
     </div>

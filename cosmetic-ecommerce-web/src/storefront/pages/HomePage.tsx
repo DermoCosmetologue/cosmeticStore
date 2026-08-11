@@ -160,6 +160,17 @@ export default function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    const scriptId = 'tiktok-creator-embed'
+    if (document.getElementById(scriptId)) return
+
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.async = true
+    script.src = 'https://www.tiktok.com/embed.js'
+    document.body.appendChild(script)
+  }, [])
+
   const heroSrc = homeContent.hero.image_url || heroImage
   const categoryCarouselItems = categories.length > 1 ? [...categories, ...categories] : categories
   const showcaseCarouselItems =
@@ -369,6 +380,25 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <section className="container section-block tiktok-section" aria-labelledby="tiktok-title">
+        <div className="section-heading">
+          <span className="eyebrow">Suivez-nous</span>
+          <h2 id="tiktok-title">Retrouvez-nous sur TikTok</h2>
+        </div>
+        <blockquote
+          className="tiktok-embed"
+          cite="https://www.tiktok.com/@dermocosmetologue"
+          data-unique-id="dermocosmetologue"
+          data-embed-type="creator"
+        >
+          <section>
+            <a target="_blank" rel="noreferrer" href="https://www.tiktok.com/@dermocosmetologue?refer=creator_embed">
+              @dermocosmetologue
+            </a>
+          </section>
+        </blockquote>
+      </section>
     </>
   )
 }

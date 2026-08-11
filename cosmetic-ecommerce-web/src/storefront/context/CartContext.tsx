@@ -19,7 +19,7 @@ export type CartItem = {
 
 export type CartContextType = {
   items: CartItem[]
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void
+  addToCart: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void
   setCartItems: (items: CartItem[]) => void
   removeFromCart: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
@@ -56,15 +56,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+  const addToCart = useCallback((item: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    const amount = Math.max(1, Math.floor(quantity))
     setItems((prev) => {
       const existing = prev.find((p) => p.id === item.id)
       if (existing) {
         return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+          p.id === item.id ? { ...p, quantity: p.quantity + amount } : p
         )
       }
-      return [...prev, { ...item, quantity: 1 }]
+      return [...prev, { ...item, quantity: amount }]
     })
 
     setAddedProductName(item.name)

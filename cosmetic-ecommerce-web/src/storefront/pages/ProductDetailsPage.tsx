@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useCart } from '../context/useCart'
 import { useWishlist } from '../context/useWishlist'
 import { applyProductBadges, fetchProductEngagementStats } from '../services/productEngagement'
+import QuantitySelector from '../components/QuantitySelector'
 
 type Product = {
   id: string
@@ -87,6 +88,7 @@ export default function ProductDetailsPage() {
   const { isInWishlist, toggleWishlist } = useWishlist()
   const [product, setProduct] = useState<Product | null>(null)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [selectedQuantity, setSelectedQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -108,6 +110,7 @@ export default function ProductDetailsPage() {
         const statsMap = await fetchProductEngagementStats([mappedProduct.id])
         setProduct(applyProductBadges([mappedProduct], statsMap)[0])
         setActiveImageIndex(0)
+        setSelectedQuantity(1)
       }
       setLoading(false)
     }
@@ -195,11 +198,16 @@ export default function ProductDetailsPage() {
                 price: product.price,
                 slug: product.slug,
                 thumbnail: product.thumbnail,
-              })
+              }, selectedQuantity)
             }
           >
-            Ajouter au panier
+            Ajouter {selectedQuantity} au panier
           </button>
+          <QuantitySelector
+            quantity={selectedQuantity}
+            onDecrease={() => setSelectedQuantity((quantity) => Math.max(1, quantity - 1))}
+            onIncrease={() => setSelectedQuantity((quantity) => quantity + 1)}
+          />
           <button
             type="button"
             className="btn-secondary"

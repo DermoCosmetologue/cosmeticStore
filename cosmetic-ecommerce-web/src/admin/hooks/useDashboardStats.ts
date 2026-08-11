@@ -3,11 +3,15 @@ import { supabase } from '../../lib/supabaseClient'
 
 export type DashboardOrder = {
   id: string
-  user_id: string
+  user_id: string | null
+  address_id: string | null
   status: string
   payment_status: string
   total_amount: number
   created_at: string
+  addresses?: {
+    phone: string | null
+  } | null
   order_items?: {
     product_id: string
     product_name: string
@@ -42,6 +46,12 @@ function getLastDays(days: number) {
   })
 }
 
+function getCustomerKey(order: DashboardOrder) {
+  if (order.user_id) return `user:${order.user_id}`
+  if (order.addresses?.phone) return `phone:${order.addresses.phone.replace(/\D/g, '')}`
+  return `guest-order:${order.id}`
+}
+
 export function useDashboardStats() {
   const [orders, setOrders] = useState<DashboardOrder[]>([])
   const [productsCount, setProductsCount] = useState(0)
@@ -66,10 +76,12 @@ export function useDashboardStats() {
             .select(`
               id,
               user_id,
+              address_id,
               status,
               payment_status,
               total_amount,
               created_at,
+              addresses(phone),
               order_items(product_id, product_name, quantity, line_total)
             `)
             .gte('created_at', since.toISOString())
@@ -101,7 +113,16 @@ export function useDashboardStats() {
   return useMemo(() => {
     const paidOrders = orders.filter((order) => order.payment_status === 'paid')
     const revenue = paidOrders.reduce((total, order) => total + Number(order.total_amount || 0), 0)
-    const activeCustomers = new Set(orders.map((order) => order.user_id)).size
+    const activeCustomers = new Set(orders.map(getCustomerKey)).size
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const todayOrders = orders.filter((order) => {
+      const orderDate = new Date(order.created_at)
+      return orderDate >= today && orderDate < tomorrow
+    })
+    const dailyCustomers = new Set(todayOrders.map(getCustomerKey)).size
     const conversionRate = orders.length > 0 ? Math.round((paidOrders.length / orders.length) * 100) : 0
     const averageOrderValue = paidOrders.length > 0 ? Math.round(revenue / paidOrders.length) : 0
 
@@ -146,6 +167,8 @@ export function useDashboardStats() {
         orders: orders.length,
         paidOrders: paidOrders.length,
         activeCustomers,
+        dailyOrders: todayOrders.length,
+        dailyCustomers,
         productsCount,
         conversionRate,
         averageOrderValue,
