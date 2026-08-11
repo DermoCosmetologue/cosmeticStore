@@ -77,6 +77,24 @@ function appendDescriptionImages(description: string, imageUrls: string[], produ
   return [currentDescription, ...markdownImages].filter(Boolean).join('\n\n')
 }
 
+function getSaveErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+
+  if (/row-level security|permission denied|not authorized/i.test(message)) {
+    return "Enregistrement refuse : votre compte n'a pas les droits administrateur Supabase."
+  }
+
+  if (/bucket|storage|mime|file size/i.test(message)) {
+    return "Le produit a ete cree, mais l'image n'a pas pu etre importee. Verifiez le bucket product-images et ses droits."
+  }
+
+  if (/duplicate key|unique|slug/i.test(message)) {
+    return "Ce slug est deja utilise. Choisissez-en un autre."
+  }
+
+  return `Impossible d'enregistrer le produit : ${message}`
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -212,7 +230,7 @@ export default function ProductsPage() {
       await loadProducts()
     } catch (error) {
       console.error(error)
-      setErrorMessage("Impossible d'enregistrer le produit.")
+      setErrorMessage(getSaveErrorMessage(error))
     } finally {
       setSaving(false)
     }

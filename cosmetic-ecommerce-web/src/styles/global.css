@@ -1805,31 +1805,6 @@ input:focus {
   box-shadow: var(--shadow-soft);
 }
 
-.cart-order-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1rem 1.1rem;
-}
-
-.cart-order-banner.retail {
-  background: linear-gradient(135deg, rgba(111, 133, 104, 0.08), rgba(255, 255, 255, 0.82));
-  border-color: rgba(111, 133, 104, 0.3);
-}
-
-.cart-order-banner.wholesale {
-  background: linear-gradient(135deg, rgba(184, 138, 68, 0.12), rgba(255, 255, 255, 0.82));
-  border-color: rgba(184, 138, 68, 0.38);
-}
-
-.cart-order-banner strong {
-  font-size: 0.98rem;
-}
-
 .cart-list {
   overflow: hidden;
 }

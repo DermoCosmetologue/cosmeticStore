@@ -29,12 +29,12 @@ export default function CartPage() {
         {isWholesaleOrder ? (
           <>
             <span className="eyebrow">Commande grossiste</span>
-            <strong>Votre commande atteint 50 pièces ou plus : les prix de gros sont appliqués automatiquement.</strong>
+            <strong>Votre commande atteint 50 pieces ou plus : les prix de gros sont appliques automatiquement.</strong>
           </>
         ) : (
           <>
             <span className="eyebrow">Commande boutique</span>
-            <strong>Ajoutez encore {remainingForWholesale} pièce(s) pour profiter automatiquement des prix de gros.</strong>
+            <strong>Ajoutez encore {remainingForWholesale} piece(s) pour profiter automatiquement des prix de gros.</strong>
           </>
         )}
       </div>

@@ -29,6 +29,25 @@ export type ProductImageInput = {
 
 const PRODUCT_IMAGES_BUCKET = 'product-images'
 
+type ProductPayload = ProductInput
+
+const OPTIONAL_PRODUCT_COLUMNS = [
+  'is_recommended',
+  'wholesale_price',
+  'wholesale_min_quantity',
+  'is_wholesale_enabled',
+] as const
+
+function getMissingProductColumn(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  const match = message.match(/(?:column of 'products'|column)\s+['\"]?([a-z_]+)['\"]?/i)
+  const column = match?.[1]
+
+  return OPTIONAL_PRODUCT_COLUMNS.includes(column as (typeof OPTIONAL_PRODUCT_COLUMNS)[number])
+    ? column
+    : null
+}
+
 async function uploadProductFiles(productId: string, files: File[], directory = '') {
   const uploadedUrls: string[] = []
 
@@ -63,77 +82,43 @@ export async function fetchProducts() {
   return data
 }
 
-function getSafeProductPayload(payload: ProductInput) {
+function getSafeProductPayload(payload: ProductInput): ProductPayload {
   return {
     ...payload,
     ...(payload.is_recommended !== undefined ? { is_recommended: Boolean(payload.is_recommended) } : {}),
   }
 }
 
-export async function createProduct(payload: ProductInput) {
-  const basePayload = getSafeProductPayload(payload)
+async function saveProduct<T>(
+  payload: ProductInput,
+  save: (safePayload: Partial<ProductInput>) => PromiseLike<{ data: T; error: unknown }>,
+) {
+  const safePayload: Partial<ProductInput> = getSafeProductPayload(payload)
 
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .insert(basePayload)
-      .select()
-      .single()
+  while (true) {
+    const result = await save(safePayload)
+    const { error } = result
+    if (!error) return result
 
-    if (error) throw error
-    return data
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const missingColumn = getMissingProductColumn(error)
+    if (!missingColumn || !(missingColumn in safePayload)) throw error
 
-    if (message.includes('is_recommended') || message.includes('does not exist')) {
-      const { is_recommended, ...fallbackPayload } = basePayload
-      void is_recommended
-      const { data, error: fallbackError } = await supabase
-        .from('products')
-        .insert(fallbackPayload)
-        .select()
-        .single()
-
-      if (fallbackError) throw fallbackError
-      return data
-    }
-
-    throw error
+    delete safePayload[missingColumn as keyof ProductInput]
   }
 }
 
+export async function createProduct(payload: ProductInput) {
+  const { data } = await saveProduct(payload, (safePayload) =>
+    supabase.from('products').insert(safePayload).select().single(),
+  )
+  return data
+}
+
 export async function updateProduct(id: string, payload: ProductInput) {
-  const basePayload = getSafeProductPayload(payload)
-
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .update(basePayload)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-
-    if (message.includes('is_recommended') || message.includes('does not exist')) {
-      const { is_recommended, ...fallbackPayload } = basePayload
-      void is_recommended
-      const { data, error: fallbackError } = await supabase
-        .from('products')
-        .update(fallbackPayload)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (fallbackError) throw fallbackError
-      return data
-    }
-
-    throw error
-  }
+  const { data } = await saveProduct(payload, (safePayload) =>
+    supabase.from('products').update(safePayload).eq('id', id).select().single(),
+  )
+  return data
 }
 
 export async function deleteProduct(id: string) {
