@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
-import { useCart } from '../context/useCart'
 import { useAuth } from '../useAuth'
 
 type Order = {
@@ -55,90 +54,17 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
-function getOrderItemProduct(item: NonNullable<Order['order_items']>[number]) {
-  return Array.isArray(item.products) ? item.products[0] : item.products
-}
-
-type XpayeReturnInfo = {
-  orderId: string
-  referenceNumber: string
-}
-
-function getXpayeReturnInfo(search: string): XpayeReturnInfo | null {
-  const params = new URLSearchParams(search)
-
-  if (params.get('responsecode') !== '0') {
-    return null
-  }
-
-  const referenceFromParams = params.get('referenceNumber') || ''
-  const returnContext = params.get('returnContext')
-
-  if (!returnContext) {
-    return referenceFromParams ? { orderId: '', referenceNumber: referenceFromParams } : null
-  }
-
-  try {
-    const parsed = JSON.parse(returnContext) as Partial<
-      XpayeReturnInfo & {
-        orderReference: string
-        xpayeReference: string
-      }
-    >
-    const orderId = typeof parsed.orderId === 'string' ? parsed.orderId : ''
-    const referenceNumber =
-      typeof parsed.orderReference === 'string'
-        ? parsed.orderReference
-        : typeof parsed.referenceNumber === 'string'
-          ? parsed.referenceNumber
-          : referenceFromParams
-
-    return orderId || referenceNumber ? { orderId, referenceNumber } : null
-  } catch {
-    return referenceFromParams ? { orderId: '', referenceNumber: referenceFromParams } : null
-  }
-}
-
 export default function OrdersPage() {
   const { user } = useAuth()
-  const { setCartItems } = useCart()
-  const navigate = useNavigate()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     const fetchOrders = async () => {
       if (!user) {
         setLoading(false)
         return
-      }
-
-      const xpayeReturnInfo = getXpayeReturnInfo(window.location.search)
-
-      if (xpayeReturnInfo) {
-        let updateQuery = supabase
-          .from('orders')
-          .update({
-            status: 'processing',
-            payment_status: 'paid',
-            payment_method: 'xpaye',
-          })
-          .eq('user_id', user.id)
-
-        updateQuery = xpayeReturnInfo.orderId
-          ? updateQuery.eq('id', xpayeReturnInfo.orderId)
-          : updateQuery.eq('order_number', xpayeReturnInfo.referenceNumber)
-
-        const { error } = await updateQuery
-
-        if (error) {
-          setErrorMessage(error.message)
-        } else {
-          setSuccessMessage('Paiement confirme. Votre commande est en preparation.')
-          navigate('/orders', { replace: true })
-        }
       }
 
       const { data, error } = await supabase
@@ -172,34 +98,9 @@ export default function OrdersPage() {
     }
 
     fetchOrders()
-  }, [navigate, user])
+  }, [user])
 
   const totalSpent = orders.reduce((total, order) => total + Number(order.total_amount || 0), 0)
-
-  const handleContinueOrder = (order: Order) => {
-    const cartItems = (order.order_items ?? [])
-      .filter((item) => getOrderItemProduct(item)?.is_active !== false)
-      .map((item) => {
-        const product = getOrderItemProduct(item)
-
-        return {
-          id: item.product_id,
-          name: item.product_name,
-          price: Number(item.unit_price || 0),
-          slug: product?.slug || item.product_id,
-          thumbnail: item.product_image,
-          quantity: Number(item.quantity || 1),
-        }
-      })
-
-    if (cartItems.length === 0) {
-      setErrorMessage('Impossible de reprendre cette commande: aucun produit actif disponible.')
-      return
-    }
-
-    setCartItems(cartItems)
-    navigate(`/payment/${order.id}`)
-  }
 
   if (loading) return <div className="container loading-card">Chargement...</div>
 
@@ -222,7 +123,6 @@ export default function OrdersPage() {
       </div>
 
       {errorMessage && <p className="auth-notice error" role="alert">{errorMessage}</p>}
-      {successMessage && <p className="auth-notice success" role="status">{successMessage}</p>}
 
       {orders.length > 0 && (
         <div className="orders-summary">
@@ -255,11 +155,6 @@ export default function OrdersPage() {
               (total, item) => total + Number(item.quantity || 0),
               0,
             )
-            const canContinue =
-              ['pending_payment', 'pending'].includes(order.status) &&
-              ['unpaid', 'pending'].includes(order.payment_status) &&
-              order.payment_method !== 'cash_on_delivery'
-
             return (
               <article className="order-card" key={order.id}>
                 <div className="order-card-main">
@@ -286,14 +181,6 @@ export default function OrdersPage() {
                     <strong>{Number(order.total_amount || 0).toLocaleString('fr-FR')} FCFA</strong>
                   </div>
                 </div>
-
-                {canContinue && (
-                  <div className="order-card-actions">
-                    <button type="button" className="btn-primary" onClick={() => handleContinueOrder(order)}>
-                      Continuer la commande
-                    </button>
-                  </div>
-                )}
               </article>
             )
           })}

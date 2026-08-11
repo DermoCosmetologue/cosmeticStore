@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 import { AuthContext } from './authContextValue'
 
 function getSiteUrl() {
-  return (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '')
+  return window.location.origin.replace(/\/$/, '')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

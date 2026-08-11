@@ -41,7 +41,7 @@ function getCheckoutErrorMessage(error: unknown) {
 }
 
 export default function CheckoutPage() {
-  const { items, totalPrice, totalItems, clearCart, isWholesaleOrder } = useCart()
+  const { items, totalPrice, totalItems, clearCart, getItemUnitPrice, isWholesaleOrder } = useCart()
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -100,13 +100,37 @@ export default function CheckoutPage() {
           id: item.id,
           quantity: item.quantity,
         })),
-        paymentMethod: 'xpaye',
-        notes: 'Commande créée depuis le site public',
+        paymentMethod: 'whatsapp',
+        notes: 'Commande créée depuis le site public et transmise par WhatsApp',
       })
 
       clearCart()
-      alert('Commande enregistrée avec succès')
-      navigate(`/payment/${orderId}`)
+      const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE?.replace(/\D/g, '') || '2250709969567'
+      const orderLines = items
+        .map(
+          (item) =>
+            `- ${item.name} × ${item.quantity} : ${(getItemUnitPrice(item) * item.quantity).toLocaleString('fr-FR')} FCFA`,
+        )
+        .join('\n')
+      const whatsappMessage = [
+        'Bonjour, je viens de passer une commande sur Dermo Cosmetologue.',
+        '',
+        `Référence : ${orderId}`,
+        `Type : ${isWholesaleOrder ? 'Commande grossiste (50 pièces ou plus)' : 'Commande normale'}`,
+        '',
+        'Client',
+        `Nom : ${fullName}`,
+        `Téléphone : ${phone}`,
+        `Adresse : ${addressLine1}, ${district ? `${district}, ` : ''}${city}`,
+        '',
+        'Commande',
+        orderLines,
+        '',
+        `Total : ${totalPrice.toLocaleString('fr-FR')} FCFA`,
+        'Merci de confirmer la prise en charge de ma commande.',
+      ].join('\n')
+
+      window.location.assign(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`)
     } catch (error) {
       console.error(error)
       setErrorMessage(getCheckoutErrorMessage(error))
@@ -173,7 +197,7 @@ export default function CheckoutPage() {
           </label>
 
           <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? 'Envoi...' : 'Confirmer la commande'}
+            {submitting ? 'Envoi...' : 'Confirmer et envoyer sur WhatsApp'}
           </button>
         </form>
 

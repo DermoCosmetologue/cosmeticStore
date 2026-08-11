@@ -163,7 +163,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     eyebrow: 'Service premium',
     title: 'Une experience soignee, du panier a la reception.',
     items: [
-      { title: 'Paiement securise', text: 'XPAYE, carte et mobile money selon disponibilite.' },
+      { title: 'Commande accompagnee', text: 'Confirmation et prise en charge rapide par WhatsApp.' },
       { title: 'Preparation attentive', text: 'Commande verifiee avant expedition.' },
       { title: 'Suivi client', text: 'Historique et statut accessibles depuis votre compte.' },
     ],

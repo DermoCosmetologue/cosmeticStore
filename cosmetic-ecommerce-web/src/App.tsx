@@ -10,7 +10,6 @@ const CatalogPage = lazy(() => import('./storefront/pages/CatalogPage'))
 const ProductDetailsPage = lazy(() => import('./storefront/pages/ProductDetailsPage'))
 const CartPage = lazy(() => import('./storefront/pages/CartPage'))
 const CheckoutPage = lazy(() => import('./storefront/pages/CheckoutPage'))
-const PaymentPage = lazy(() => import('./storefront/pages/PaymentPage'))
 const WishlistPage = lazy(() => import('./storefront/pages/WishlistPage'))
 const AuthPage = lazy(() => import('./storefront/AuthPage'))
 const AuthCallbackPage = lazy(() => import('./storefront/AuthCallbackPage'))
@@ -33,7 +32,6 @@ export default function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/payment/:orderId" element={<PaymentPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
