@@ -18,7 +18,7 @@ declare
   v_item jsonb; v_product_id uuid; v_product_price numeric(12,2);
   v_product_wholesale_price numeric(12,2); v_product_wholesale_enabled boolean;
   v_product_stock integer; v_product_name text; v_product_thumbnail text;
-  v_qty integer; v_total_quantity integer := 0; v_unit_price numeric(12,2);
+  v_qty integer; v_total_quantity integer := 0; v_all_products_meet_wholesale_minimum boolean := false; v_unit_price numeric(12,2);
 begin
   if auth.uid() is null or auth.uid() <> p_user_id then
     raise exception 'Utilisateur non autorise pour cette commande';
@@ -28,6 +28,8 @@ begin
   select coalesce(sum(coalesce((item->>'quantity')::int, 1)), 0)
   into v_total_quantity from jsonb_array_elements(p_items) as item;
   if v_total_quantity <= 0 then raise exception 'Quantite de commande invalide'; end if;
+  select coalesce(bool_and(coalesce((item->>'quantity')::int, 0) >= 6), false)
+  into v_all_products_meet_wholesale_minimum from jsonb_array_elements(p_items) as item;
 
   insert into public.profiles (id, full_name, role)
   values (p_user_id, coalesce(nullif(p_address->>'full_name', ''), 'Client'), 'customer')
@@ -57,7 +59,7 @@ begin
     if v_qty <= 0 then raise exception 'Quantite de commande invalide'; end if;
     if v_product_stock < v_qty then raise exception 'Stock insuffisant pour le produit %', v_product_name; end if;
 
-    v_unit_price := case when v_total_quantity >= 50 and v_product_wholesale_enabled
+    v_unit_price := case when v_total_quantity >= 50 and v_all_products_meet_wholesale_minimum and v_product_wholesale_enabled
       and v_product_wholesale_price is not null then v_product_wholesale_price else v_product_price end;
 
     insert into public.order_items (order_id, product_id, product_name, product_image, unit_price, quantity, line_total)

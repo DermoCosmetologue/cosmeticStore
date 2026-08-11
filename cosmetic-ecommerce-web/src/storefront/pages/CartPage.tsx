@@ -3,7 +3,7 @@ import { useCart } from '../context/useCart'
 import CartItemRow from '../components/CartItemRow'
 
 export default function CartPage() {
-  const { items, totalPrice, totalItems, clearCart, isWholesaleOrder, remainingForWholesale } = useCart()
+  const { items, totalPrice, totalItems, clearCart, isWholesaleOrder, remainingForWholesale, itemsBelowWholesaleMinimum } = useCart()
   const formattedTotal = `${totalPrice.toLocaleString('fr-FR')} FCFA`
 
   if (items.length === 0) {
@@ -29,12 +29,16 @@ export default function CartPage() {
         {isWholesaleOrder ? (
           <>
             <span className="eyebrow">Commande grossiste</span>
-            <strong>Votre commande atteint 50 pieces ou plus : les prix de gros sont appliques automatiquement.</strong>
+            <strong>Votre commande atteint les deux seuils : 6 pieces minimum par produit et 50 pieces au total.</strong>
           </>
         ) : (
           <>
             <span className="eyebrow">Commande boutique</span>
-            <strong>Ajoutez encore {remainingForWholesale} piece(s) pour profiter automatiquement des prix de gros.</strong>
+            <strong>
+              {remainingForWholesale > 0
+                ? `Ajoutez encore ${remainingForWholesale} piece(s), puis assurez-vous d'avoir au moins 6 pieces de chaque produit.`
+                : `Ajoutez au moins 6 pieces pour chaque produit : ${itemsBelowWholesaleMinimum.map((item) => item.name).join(', ')}.`}
+            </strong>
           </>
         )}
       </div>

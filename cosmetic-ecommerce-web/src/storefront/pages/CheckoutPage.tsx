@@ -116,7 +116,7 @@ export default function CheckoutPage() {
         'Bonjour, je viens de passer une commande sur Dermo Cosmetologue.',
         '',
         `Référence : ${orderId}`,
-        `Type : ${isWholesaleOrder ? 'Commande grossiste (50 pièces ou plus)' : 'Commande normale'}`,
+        `Type : ${isWholesaleOrder ? 'Commande grossiste (6 pièces minimum par produit et 50 pièces au total)' : 'Commande normale'}`,
         '',
         'Client',
         `Nom : ${fullName}`,

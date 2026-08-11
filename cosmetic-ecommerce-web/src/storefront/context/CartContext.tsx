@@ -28,8 +28,12 @@ export type CartContextType = {
   totalPrice: number
   isWholesaleOrder: boolean
   remainingForWholesale: number
+  itemsBelowWholesaleMinimum: CartItem[]
   getItemUnitPrice: (item: CartItem) => number
 }
+
+const WHOLESALE_MIN_TOTAL_QUANTITY = 50
+const WHOLESALE_MIN_PRODUCT_QUANTITY = 6
 
 function isCartItems(value: unknown): value is CartItem[] {
   return Array.isArray(value)
@@ -93,7 +97,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const totalItems = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items])
-  const isWholesaleOrder = totalItems >= 50
+  const itemsBelowWholesaleMinimum = useMemo(
+    () => items.filter((item) => item.quantity < WHOLESALE_MIN_PRODUCT_QUANTITY),
+    [items],
+  )
+  const isWholesaleOrder = totalItems >= WHOLESALE_MIN_TOTAL_QUANTITY && itemsBelowWholesaleMinimum.length === 0
   const getItemUnitPrice = useCallback((item: CartItem) => {
     if (isWholesaleOrder && item.isWholesaleEnabled && item.wholesalePrice != null) return item.wholesalePrice
     return item.retailPrice ?? item.price
@@ -102,7 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => items.reduce((sum, item) => sum + item.quantity * getItemUnitPrice(item), 0),
     [getItemUnitPrice, items],
   )
-  const remainingForWholesale = Math.max(0, 50 - totalItems)
+  const remainingForWholesale = Math.max(0, WHOLESALE_MIN_TOTAL_QUANTITY - totalItems)
   const contextValue = useMemo(
     () => ({
       items,
@@ -115,9 +123,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       totalPrice,
       isWholesaleOrder,
       remainingForWholesale,
+      itemsBelowWholesaleMinimum,
       getItemUnitPrice,
     }),
-    [addToCart, clearCart, getItemUnitPrice, isWholesaleOrder, items, remainingForWholesale, removeFromCart, setCartItems, totalItems, totalPrice, updateQuantity],
+    [addToCart, clearCart, getItemUnitPrice, isWholesaleOrder, items, itemsBelowWholesaleMinimum, remainingForWholesale, removeFromCart, setCartItems, totalItems, totalPrice, updateQuantity],
   )
 
   return (

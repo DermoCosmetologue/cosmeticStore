@@ -3,6 +3,8 @@
 
 alter table public.addresses alter column user_id drop not null;
 alter table public.orders alter column user_id drop not null;
+alter table public.products alter column wholesale_min_quantity set default 6;
+update public.products set wholesale_min_quantity = 6 where wholesale_min_quantity < 6;
 
 create or replace function public.create_order_with_items(
   p_user_id uuid, p_address jsonb, p_items jsonb,
@@ -16,7 +18,7 @@ declare
   v_item jsonb; v_product_id uuid; v_product_price numeric(12,2);
   v_product_wholesale_price numeric(12,2); v_product_wholesale_enabled boolean;
   v_product_stock integer; v_product_name text; v_product_thumbnail text;
-  v_qty integer; v_total_quantity integer := 0; v_unit_price numeric(12,2);
+  v_qty integer; v_total_quantity integer := 0; v_all_products_meet_wholesale_minimum boolean := false; v_unit_price numeric(12,2);
 begin
   if p_user_id is not null and auth.uid() <> p_user_id then
     raise exception 'Utilisateur non autorise pour cette commande';
@@ -32,6 +34,8 @@ begin
   select coalesce(sum(coalesce((item->>'quantity')::int, 1)), 0)
   into v_total_quantity from jsonb_array_elements(p_items) as item;
   if v_total_quantity <= 0 then raise exception 'Quantite de commande invalide'; end if;
+  select coalesce(bool_and(coalesce((item->>'quantity')::int, 0) >= 6), false)
+  into v_all_products_meet_wholesale_minimum from jsonb_array_elements(p_items) as item;
 
   insert into public.addresses (user_id, label, full_name, phone, country, city, district, address_line1, is_default)
   values (p_user_id, coalesce(p_address->>'label', 'Livraison'), p_address->>'full_name',
@@ -55,7 +59,7 @@ begin
     v_qty := coalesce((v_item->>'quantity')::int, 1);
     if v_qty <= 0 then raise exception 'Quantite de commande invalide'; end if;
     if v_product_stock < v_qty then raise exception 'Stock insuffisant pour le produit %', v_product_name; end if;
-    v_unit_price := case when v_total_quantity >= 50 and v_product_wholesale_enabled
+    v_unit_price := case when v_total_quantity >= 50 and v_all_products_meet_wholesale_minimum and v_product_wholesale_enabled
       and v_product_wholesale_price is not null then v_product_wholesale_price else v_product_price end;
     insert into public.order_items (order_id, product_id, product_name, product_image, unit_price, quantity, line_total)
     values (v_order_id, v_product_id, v_product_name, v_product_thumbnail, v_unit_price, v_qty, v_unit_price * v_qty);

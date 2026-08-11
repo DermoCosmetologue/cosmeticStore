@@ -41,7 +41,7 @@ const emptyForm: ProductInput = {
   short_description: '',
   price: 0,
   wholesale_price: null,
-  wholesale_min_quantity: 0,
+  wholesale_min_quantity: 6,
   is_wholesale_enabled: false,
   is_recommended: false,
   stock: 0,

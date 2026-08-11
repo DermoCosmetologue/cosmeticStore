@@ -195,7 +195,7 @@ create table if not exists public.products (
   short_description text,
   price numeric(12,2) not null check (price >= 0),
   wholesale_price numeric(12,2) default null check (wholesale_price is null or wholesale_price >= 0),
-  wholesale_min_quantity integer not null default 0 check (wholesale_min_quantity >= 0),
+  wholesale_min_quantity integer not null default 6 check (wholesale_min_quantity >= 0),
   is_wholesale_enabled boolean not null default false,
   compare_at_price numeric(12,2),
   sku text unique,
@@ -378,6 +378,7 @@ declare
   v_product_thumbnail text;
   v_qty integer;
   v_total_quantity integer := 0;
+  v_all_products_meet_wholesale_minimum boolean := false;
   v_unit_price numeric(12,2);
 begin
   if auth.uid() is null or auth.uid() <> p_user_id then
@@ -395,6 +396,10 @@ begin
   if v_total_quantity <= 0 then
     raise exception 'Quantite de commande invalide';
   end if;
+
+  select coalesce(bool_and(coalesce((item->>'quantity')::int, 0) >= 6), false)
+  into v_all_products_meet_wholesale_minimum
+  from jsonb_array_elements(p_items) as item;
 
   insert into public.profiles (id, full_name, role)
   values (p_user_id, coalesce(nullif(p_address->>'full_name', ''), 'Client'), 'customer')
@@ -478,6 +483,7 @@ begin
 
     v_unit_price := case
       when v_total_quantity >= 50
+        and v_all_products_meet_wholesale_minimum
         and v_product_wholesale_enabled = true
         and v_product_wholesale_price is not null
       then v_product_wholesale_price
