@@ -13,6 +13,23 @@ begin
 end;
 $$;
 
+-- A customer must never be able to promote their own profile to admin.
+-- Role changes are performed only from the Supabase dashboard / a trusted server.
+create or replace function public.prevent_profile_role_change()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role
+    and current_user not in ('postgres', 'service_role') then
+    raise exception 'Le role ne peut pas etre modifie depuis le client.';
+  end if;
+
+  return new;
+end;
+$$;
+
 -- =========================================================
 -- PROFILES
 -- =========================================================
@@ -25,6 +42,21 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 update public.profiles
 set role = 'admin'
 where id = 'd18e634e-1642-4205-adf4-09a87cd3a8e9';
@@ -638,12 +670,24 @@ on public.profiles
 for select
 using (auth.uid() = id);
 
+drop policy if exists "profiles_admin_select" on public.profiles;
+create policy "profiles_admin_select"
+on public.profiles
+for select
+using (public.is_admin());
+
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own"
 on public.profiles
 for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+drop trigger if exists prevent_profile_role_change on public.profiles;
+create trigger prevent_profile_role_change
+before update of role on public.profiles
+for each row
+execute function public.prevent_profile_role_change();
 
 -- =========================================================
 -- POLICIES: CATEGORIES
@@ -703,6 +747,12 @@ for all
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+drop policy if exists "addresses_admin_select" on public.addresses;
+create policy "addresses_admin_select"
+on public.addresses
+for select
+using (public.is_admin());
+
 -- =========================================================
 -- POLICIES: CART
 -- =========================================================
@@ -720,7 +770,10 @@ drop policy if exists "orders_select_own" on public.orders;
 create policy "orders_select_own"
 on public.orders
 for select
-using (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+  or public.is_admin()
+);
 
 drop policy if exists "orders_insert_own" on public.orders;
 create policy "orders_insert_own"
